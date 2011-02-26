@@ -1,0 +1,18 @@
+hydna-objc
+
+Emanuel Dahlberg
+
+http://github.com/EmanueI
+===================================================================
+
+The framework is compile through Xcode
+and four example targets can also be compiled and run.
+
+
+
+info
+-------------------------------------------------------------------
+All the headers can be found in src/ with comments.
+
+The examples are located in examples/.
+
