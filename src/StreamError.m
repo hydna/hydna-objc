@@ -16,9 +16,6 @@
     NSString *msg = @"";
     
     switch (flag) {
-        case HANDSHAKE_UNKNOWN:
-            msg = @"Unknown handshake error";
-            break;
         case HANDSHAKE_SERVER_BUSY:
             msg = @"Handshake failed, server is busy";
             break;
@@ -33,6 +30,11 @@
             break;
         case HANDSHAKE_SERVER_ERROR:
             msg = @"Handshake failed, server error";
+            break;
+			
+		default:
+		case HANDSHAKE_UNKNOWN:
+            msg = @"Unknown handshake error";
             break;
     }
     

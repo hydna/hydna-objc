@@ -14,7 +14,7 @@ const unsigned int PAYLOAD_MAX_LIMIT = 10 * 1024;
 {
     unsigned int length = HEADER_SIZE + [ payload length ];
     
-    if (length > PAYLOAD_MAX_LIMIT) {
+    if ([ payload length ] > PAYLOAD_MAX_LIMIT) {
         [NSException raise:@"RangeError" format:@"Payload max limit reached"];
     }
         

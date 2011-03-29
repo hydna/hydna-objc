@@ -80,7 +80,7 @@ int main(int argc, const char* argv[])
             
             printf("Time: %i ms\n", time/1000);
             
-            NSUInteger i = 0;
+            i = 0;
             while (i < NO_BROADCASTS) {
                 if (![ stream isDataEmpty ]) {
                     [ stream popData ];

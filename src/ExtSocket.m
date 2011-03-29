@@ -560,14 +560,15 @@ static NSMutableDictionary *m_availableSockets = nil;
             if (m_listening) {
                 [ m_listeningMutex unlock ];
                 [ self destroy:@"Could not read from the socket" ];
-            }
-            [ m_listeningMutex unlock ];
+            } else {
+				[ m_listeningMutex unlock ];
+			}
             break;
         }
         
         size = ntohs(*(unsigned short*)&header[0]);
-        payload = malloc(size * sizeof(char));
-        
+        payload = malloc((size - headerSize) * sizeof(char));
+		
         while (offset < size && n > 0) {
             n = read(m_socketFDS, payload + offset - headerSize, size - offset);
             offset += n;
@@ -578,8 +579,9 @@ static NSMutableDictionary *m_availableSockets = nil;
             if (m_listening) {
                 [ m_listeningMutex unlock ];
                 [ self destroy:@"Could not read from the socket" ];
-            }
-            [ m_listeningMutex unlock ];
+            } else {
+				[ m_listeningMutex unlock ];
+			}
             break;
         }
         
