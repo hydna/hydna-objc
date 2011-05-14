@@ -60,7 +60,7 @@ extern const unsigned int PAYLOAD_MAX_LIMIT;
     NSMutableData *m_bytes;
 }
 
-- (id) initWithAddr:(NSUInteger)addr op:(NSUInteger)op flag:(NSUInteger)flag payload:(NSData*)payload;
+- (id) initWithChannel:(NSUInteger)ch op:(NSUInteger)op flag:(NSUInteger)flag payload:(NSData*)payload;
 
 - (void) writeByte:(char)value;
 
@@ -73,5 +73,7 @@ extern const unsigned int PAYLOAD_MAX_LIMIT;
 - (int) getSize;
 
 - (const char*) getData;
+
+- (void) setChannel:(NSUInteger)value;
 
 @end

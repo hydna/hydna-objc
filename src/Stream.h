@@ -16,9 +16,9 @@ typedef enum {
     WRITE = 0x02,
     READWRITE = 0x03,
     EMIT = 0x04,
-    READ_EMIT = 0x05,
-    WRITE_EMIT = 0x06,
-    READWRITE_EMIT = 0x07
+    READEMIT = 0x05,
+    WRITEEMIT = 0x06,
+    READWRITEEMIT = 0x07
 } StreamMode;
 
 /**
@@ -29,12 +29,13 @@ typedef enum {
 @interface Stream : NSObject {
     NSString *m_host;
     NSUInteger m_port;
-    NSUInteger m_addr;
+    NSUInteger m_ch;
     
     ExtSocket *m_socket;
     
     BOOL m_connected;
-    BOOL m_pendingClose;
+	BOOL m_closing;
+	Packet *m_pendingClose;
     BOOL m_readable;
     BOOL m_writable;
     BOOL m_emitable;
@@ -68,6 +69,13 @@ typedef enum {
 - (BOOL) isConnected;
 
 /**
+ *  Checks the closing state for this Stream instance.
+ *
+ *  @return The closing state.
+ */
+- (BOOL) isClosing;
+
+/**
  *  Checks if the stream is readable.
  *
  *  @return YES if stream is readable.
@@ -89,19 +97,19 @@ typedef enum {
 - (BOOL) hasSignalSupport;
 
 /**
- *  Returns the addr that this instance listen to.
+ *  Returns the channel that this instance listen to.
  *
- *  @return addr The address.
+ *  @return The channel.
  */
-- (NSUInteger) getAddr;
+- (NSUInteger) getChannel;
 
 /**
  *  Resets the error.
  *  
- *  Connects the stream to the specified addr. If the connection fails 
+ *  Connects the stream to the specified channel. If the connection fails 
  *  immediately, an exception is thrown.
  *
- *  @param expr The address to connect to,
+ *  @param expr The channel to connect to,
  *  @param mode The mode in which to open the stream.
  *  @param token An optional token.
  */
@@ -168,9 +176,9 @@ typedef enum {
  *  Internal callback for open success.
  *  Used by the ExtSocket class.
  *
- *  @param respaddr The response address.
+ *  @param respch The response channel.
  */
-- (void) openSuccess:(NSUInteger)respaddr;
+- (void) openSuccess:(NSUInteger)respch;
 
 /**
  *  Checks if some error has occured in the stream

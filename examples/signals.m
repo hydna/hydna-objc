@@ -11,7 +11,7 @@ int main(int argc, const char* argv[])
     NSAutoreleasePool *pool = [[ NSAutoreleasePool alloc ] init ];
     
     Stream *stream = [[ Stream alloc ] init ];
-    [ stream connect:@"localhost/x00112233" mode:READWRITE_EMIT token:nil ];
+    [ stream connect:@"localhost/x00112233" mode:READWRITEEMIT token:nil ];
     
     while (![ stream isConnected ]) {
         [ stream checkForStreamError ];

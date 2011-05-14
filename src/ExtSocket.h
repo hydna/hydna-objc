@@ -76,9 +76,9 @@ extern const int HANDSHAKE_RESP_SIZE;
 /**
  *  Decrease the reference count.
  *
- *  @param addr The address to dealloc.
+ *  @param ch The channel to dealloc.
  */
-- (void) deallocStream:(NSUInteger)addr;
+- (void) deallocStream:(NSUInteger)ch;
 
 /**
  *  Request to open a stream.

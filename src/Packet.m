@@ -10,7 +10,7 @@ const unsigned int PAYLOAD_MAX_LIMIT = 10 * 1024;
 
 @implementation Packet
 
-- (id) initWithAddr:(NSUInteger)addr op:(NSUInteger)op flag:(NSUInteger)flag payload:(NSData*)payload
+- (id) initWithChannel:(NSUInteger)ch op:(NSUInteger)op flag:(NSUInteger)flag payload:(NSData*)payload
 {
     unsigned int length = HEADER_SIZE + [ payload length ];
     
@@ -26,7 +26,7 @@ const unsigned int PAYLOAD_MAX_LIMIT = 10 * 1024;
     
     [ self writeShort:length ];
     [ self writeByte:0 ]; // Reserved
-    [ self writeUnsignedInt:addr ];
+    [ self writeUnsignedInt:ch ];
     [ self writeByte:op << 4 | flag ];
     
     if (payload) {
@@ -72,6 +72,15 @@ const unsigned int PAYLOAD_MAX_LIMIT = 10 * 1024;
 - (const char*) getData
 {
     return [ m_bytes bytes ];
+}
+
+- (void) setChannel:(NSUInteger)value
+{
+	char result[4];
+	
+	*(unsigned int*)&result[0] = htonl(value);
+	
+	[ m_bytes replaceBytesInRange:NSMakeRange(3, 4) withBytes:result ];
 }
 
 @end

@@ -5,16 +5,6 @@
 
 #import "Stream.h"
 
-@interface Stream ()
-
-/**
- *  Internally close the stream.
- */
-- (void) internalClose;
-
-@end
-
-
 @implementation Stream
 
 - (id) init
@@ -25,7 +15,7 @@
     
     self->m_host = @"";
     self->m_port = 7010;
-    self->m_addr = 1;
+    self->m_ch = 0;
     self->m_socket = nil;
     self->m_connected = NO;
     self->m_pendingClose = NO;
@@ -62,6 +52,14 @@
     return result;
 }
 
+- (BOOL) isClosing
+{
+    [ m_connectMutex lock ];
+    BOOL result = m_closing;
+    [ m_connectMutex unlock ];
+    return result;
+}
+
 - (BOOL) isReadable
 {
     [ m_connectMutex lock ];
@@ -86,10 +84,10 @@
     return result;
 }
 
-- (NSUInteger) getAddr
+- (NSUInteger) getChannel
 {
     [ m_connectMutex lock ];
-    NSUInteger result = m_addr;
+    NSUInteger result = m_ch;
     [ m_connectMutex unlock ];
     return result;
 }
@@ -106,12 +104,12 @@
     }
     [ m_connectMutex unlock ];
     
-    if (mode == 0x04 || mode < READ || mode > READWRITE_EMIT) {
+    if (mode == 0x04 || mode < READ || mode > READWRITEEMIT) {
         [NSException raise:@"Error" format:@"Invalid stream mode"];
     }
     
     if (!expr) {
-        [NSException raise:@"Error" format:@"No address to connect to"];
+        [NSException raise:@"Error" format:@"No channel to connect to"];
     }
     
     m_mode = mode;
@@ -122,7 +120,7 @@
     
     NSString *host = expr;
     NSUInteger port = 7010;
-    NSUInteger addr = 1;
+    NSUInteger ch = 1;
     NSString *tokens = @"";
     NSRange pos;
     
@@ -141,15 +139,15 @@
         BOOL result = [[NSScanner scannerWithString:addrs] scanHexInt:&addri];
         
         if (!result) {
-            [NSException raise:@"Error" format:@"Could not read the address \"%@\"", addrs];
+            [NSException raise:@"Error" format:@"Could not read the channel \"%@\"", addrs];
         } else {
-            addr = addri;
+            ch = addri;
         }
 
     } else {
         pos = [ host rangeOfString:@"/" ];
         if (pos.length != 0) {
-            addr = [[ host substringFromIndex:pos.location + 1] integerValue];
+            ch = [[ host substringFromIndex:pos.location + 1] integerValue];
             host = [ host substringToIndex:pos.location ];
         }
     }
@@ -162,19 +160,19 @@
     
     m_host = host;
     m_port = port;
-    m_addr = addr;
+    m_ch = ch;
     
     m_socket = [ExtSocket getSocketWithHost:m_host port:m_port];
     
     [ m_socket allocStream ];
     
     if (token || tokens == @"") {
-        packet = [[ Packet alloc ] initWithAddr:m_addr op:OPEN flag:mode payload:token];
+        packet = [[ Packet alloc ] initWithChannel:m_ch op:OPEN flag:mode payload:token];
     } else {
-        packet = [[ Packet alloc ] initWithAddr:m_addr op:OPEN flag:mode payload:[ tokens dataUsingEncoding:NSUTF8StringEncoding]];
+        packet = [[ Packet alloc ] initWithChannel:m_ch op:OPEN flag:mode payload:[ tokens dataUsingEncoding:NSUTF8StringEncoding]];
     }
 
-    request = [[ OpenRequest alloc ] initWith:self addr:m_addr packet:packet ];
+    request = [[ OpenRequest alloc ] initWith:self ch:m_ch packet:packet ];
     
     if (m_error != @"") {
         [ m_error release ];
@@ -202,7 +200,7 @@
     }
     [ m_connectMutex unlock ];
     
-    if ((m_mode & WRITE) != WRITE) {
+    if (!m_writable) {
         [NSException raise:@"Error" format:@"Stream is not writable" ];
     }
     
@@ -210,7 +208,7 @@
         [NSException raise:@"RangeError" format:@"Priority must be between 1-3" ];
     }
     
-    Packet* packet = [[ Packet alloc ] initWithAddr:m_addr op:DATA flag:priority payload:data];
+    Packet* packet = [[ Packet alloc ] initWithChannel:m_ch op:DATA flag:priority payload:data];
     
     [ m_connectMutex lock ];
     ExtSocket *socket = m_socket;
@@ -244,11 +242,11 @@
     }
     [ m_connectMutex unlock ];
     
-    if ((m_mode & EMIT) != EMIT) {
+    if (!m_emitable) {
         [NSException raise:@"Error" format:@"You do not have permission to send signals" ];
     }
     
-    Packet* packet = [[ Packet alloc ] initWithAddr:m_addr op:SIGNAL flag:type payload:data ];
+    Packet* packet = [[ Packet alloc ] initWithChannel:m_ch op:SIGNAL flag:type payload:data ];
     
     [ m_connectMutex lock ];
     ExtSocket *socket = m_socket;
@@ -277,38 +275,105 @@
 
 - (void) close
 {
+	Packet *packet;
+	
     [ m_connectMutex lock ];
-    if (!m_socket || m_pendingClose) {
+    if (!m_socket || m_closing) {
         [ m_connectMutex unlock ];
         return;
     }
+	
+	m_closing = YES;
+	m_readable = NO;
+	m_writable = NO;
+	m_emitable = NO;
     
-    if (m_openRequest) {
-        if ([ m_socket cancelOpen:m_openRequest ]) {
-            m_openRequest = nil;
-            [ m_connectMutex unlock ];
-            
-            [ self destroy:@"" ];
-        } else {
-            m_pendingClose = YES;
-            [ m_connectMutex unlock ];
-        }
-    } else {
-        [ m_connectMutex unlock ];
-        [ self internalClose ];
+    if (m_openRequest && [ m_socket cancelOpen:m_openRequest ]) {
+		// Open request hasn't been posted yet, which means that it's
+		// safe to destroy stream immediately.
+
+		m_openRequest = nil;
+		[ m_connectMutex unlock ];
+		
+		[ self destroy:@"" ];
+		return;
+	}
+	
+	packet = [[ Packet alloc ] initWithChannel:m_ch op:SIGNAL flag:SIG_END payload:nil ];
+	
+	if (m_openRequest) {
+		// Open request is not responded to yet. Wait to send ENDSIG until
+		// we get an OPENRESP.
+		
+		m_pendingClose = packet;
+		[ m_connectMutex unlock ];
+	} else {
+		[ m_connectMutex unlock ];
+		
+		
+		@try {
+#ifdef HYDNADEBUG
+			NSLog(@"Stream: Sending close signal");	
+#endif
+			
+			[ m_connectMutex lock ];
+			ExtSocket *socket = m_socket;
+			[ m_connectMutex unlock ];
+			
+			[ socket writeBytes:packet ];
+			[ packet release ];
+		}
+		@catch (NSException *e) {
+			[ m_connectMutex unlock ];
+			[ packet release ];
+			[ self destroy: [ e reason ] ];
+		}
     }
 }
 
-- (void) openSuccess:(NSUInteger)respaddr
+- (void) openSuccess:(NSUInteger)respch
 {
     [ m_connectMutex lock ];
-    m_addr = respaddr;
+	NSUInteger origch = m_ch;
+	Packet *packet;
+	
+	m_openRequest = nil;
+    m_ch = respch;
     m_connected = YES;
-    m_openRequest = nil;
     
     if (m_pendingClose) {
+		packet = m_pendingClose;
+		m_pendingClose = nil;
+		
         [ m_connectMutex unlock ];
-        [ self internalClose ];
+        
+		if (origch != respch) {
+			// channel is changed. We need to change the channel of the
+			//packet before sending to serv
+			
+			[ packet setChannel:respch ];
+		}
+		
+		@try {
+#ifdef HYDNADEBUG
+			NSLog(@"Stream: Sending close signal");	
+#endif
+			
+			[ m_connectMutex lock ];
+			ExtSocket *socket = m_socket;
+			[ m_connectMutex unlock ];
+			
+			[ socket writeBytes:packet ];
+			[ packet release ];
+		}
+		@catch (NSException *e) {
+			// Something wen't terrible wrong. Queue packet and wait
+			// for a reconnect.
+			
+			[ m_connectMutex unlock ];
+			[ packet release ];
+			[ self destroy: [ e reason ] ];
+		}
     } else {
         [ m_connectMutex unlock ];
     }
@@ -329,41 +394,26 @@
 - (void) destroy:(NSString*)error
 {
     [ m_connectMutex lock ];
+	ExtSocket *socket = m_socket;
+	BOOL connected = m_connected;
+	NSUInteger ch = m_ch;
     
-    m_pendingClose = NO;
+	m_ch = 0;
+	m_connected = NO;
     m_writable = NO;
     m_readable = NO;
+	m_pendingClose = nil;
+	m_closing = NO;
+	m_openRequest = nil;
+	m_socket = nil;
     
-    if (m_socket) {
-        [ m_socket deallocStream:m_addr ];
+    if (socket) {
+        [ socket deallocStream:connected ? ch : 0 ];
     }
     
-    m_connected = NO;
-    m_addr = 0;
-    m_openRequest = nil;
-    m_socket = nil;
     m_error = [ error copy ];
     
     [ m_connectMutex unlock ];
-}
-
-- (void) internalClose
-{
-    [ m_connectMutex lock ];
-    if (m_socket && m_connected) {
-        [ m_connectMutex unlock ];
-#ifdef HYDNADEBUG
-        NSLog(@"Stream: Sending close signal");
-#endif
-        Packet* packet = [[ Packet alloc ] initWithAddr:m_addr op:SIGNAL flag:SIG_END payload:nil ];
-        [ m_connectMutex lock ];
-        ExtSocket *socket = m_socket;
-        [ m_connectMutex unlock ];
-        [ socket writeBytes:packet ];
-    }
-    
-    NSString* error = @"";
-    [ self destroy:error ];
 }
 
 - (void) addData:(StreamData*)data
