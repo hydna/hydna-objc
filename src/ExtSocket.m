@@ -7,6 +7,10 @@
 #import "Stream.h"
 #import "StreamError.h"
 
+#ifdef HYDNADEBUG
+#import "DebugHelper.h"
+#endif
+
 #import <netinet/tcp.h>
 #import <netinet/in.h>
 #import <arpa/inet.h>
@@ -187,14 +191,14 @@ static NSMutableDictionary *m_availableSockets = nil;
     ++m_streamRefCount;
     [ m_streamRefMutex unlock ];
 #ifdef HYDNADEBUG
-    NSLog(@"ExtSocket: Allocating a new stream, stream ref count is %i", m_streamRefCount);
+	debugPrint(@"ExtSocket", 0, [NSString stringWithFormat:@"Allocating a new stream, stream ref count is %i", m_streamRefCount]);
 #endif
 }
 
 - (void) deallocStream:(NSUInteger)ch;
 {
 #ifdef HYDNADEBUG
-    NSLog(@"ExtSocket: Deallocating a stream with the channel %u", ch);
+	debugPrint(@"ExtSocket", ch, @"Deallocatin a stream");
 #endif
     [ m_destroyingMutex lock ];
     [ m_closingMutex lock ];
@@ -205,7 +209,7 @@ static NSMutableDictionary *m_availableSockets = nil;
         [ m_openStreamsMutex lock ];
         [ m_openStreams removeObjectForKey:[ NSNumber numberWithInteger:ch ] ];
 #ifdef HYDNADEBUG
-        NSLog(@"ExtSocket: Size of openStreams is now %i", [ m_openStreams count ]);
+		debugPrint(@"ExtSocket", ch, [NSString stringWithFormat:@"Size of openStreams is now %i", [ m_openStreams count ]]);
 #endif
         [ m_openStreamsMutex unlock ];
     } else {
@@ -226,7 +230,7 @@ static NSMutableDictionary *m_availableSockets = nil;
     if (m_streamRefCount == 0) {
         [ m_streamRefMutex unlock ];
 #ifdef HYDNADEBUG
-        NSLog(@"ExtSocket: No more refs, destroy socket");
+		debugPrint(@"ExtSocket", 0, @"No more refs, destroy socket");
 #endif
         [ m_destroyingMutex lock ];
         [ m_closingMutex lock ];
@@ -245,18 +249,18 @@ static NSMutableDictionary *m_availableSockets = nil;
 
 - (BOOL) requestOpen:(OpenRequest*)request
 {
-    NSUInteger streamcomp = [ request ch ];
+    NSUInteger chcomp = [ request ch ];
     NSMutableArray *queue;
     
 #ifdef HYDNADEBUG
-    NSLog(@"ExtSocket: A stream is trying to send a new open request");
+	debugPrint(@"ExtSocket", chcomp, @"A stream is trying to send a new open request");
 #endif
     
     [ m_openStreamsMutex lock ];
-    if ([ m_openStreams objectForKey:[ NSNumber numberWithInteger:streamcomp ]] != nil) {
+    if ([ m_openStreams objectForKey:[ NSNumber numberWithInteger:chcomp ]] != nil) {
         [ m_openStreamsMutex unlock ];
 #ifdef HYDNADEBUG
-        NSLog(@"ExtSocket: The stream was already open, cancel the open request");
+		debugPrint(@"ExtSocket", chcomp, @"The stream was already open, cancel the open request");
 #endif
         [ request release ];
         return NO;
@@ -264,27 +268,27 @@ static NSMutableDictionary *m_availableSockets = nil;
     [ m_openStreamsMutex unlock ];
     
     [ m_pendingMutex lock ];
-    if ([ m_pendingOpenRequests objectForKey:[ NSNumber numberWithInteger:streamcomp ]] != nil) {
+    if ([ m_pendingOpenRequests objectForKey:[ NSNumber numberWithInteger:chcomp ]] != nil) {
         [ m_pendingMutex unlock ];
         
 #ifdef HYDNADEBUG
-        NSLog(@"ExtSocket: A open request is waiting to be sent, queue up the new open request");
+		debugPrint(@"ExtSocket", chcomp, @"A open request is waiting to be sent, queue up the new open request");
 #endif
         [ m_openWaitMutex lock ];
-        queue = [ m_openWaitQueue objectForKey:[ NSNumber numberWithInteger:streamcomp ]];
+        queue = [ m_openWaitQueue objectForKey:[ NSNumber numberWithInteger:chcomp ]];
         
         if (!queue) {
             queue = [[ NSMutableArray alloc ] init ];
-            [ m_openWaitQueue setObject:queue forKey:[ NSNumber numberWithInteger:streamcomp ]];
+            [ m_openWaitQueue setObject:queue forKey:[ NSNumber numberWithInteger:chcomp ]];
         }
         
         [ queue addObject:request ];
         [ m_openWaitMutex unlock ];
     } else if (!m_handshaked) {
 #ifdef HYDNADEBUG
-        NSLog(@"ExtSocket: The socket was not connected, queue up the new open request");
+		debugPrint(@"ExtSocket", chcomp, @"The socket was not connected, queue up the new open request");
 #endif
-        [ m_pendingOpenRequests setObject:request forKey:[ NSNumber numberWithInteger:streamcomp ]];
+        [ m_pendingOpenRequests setObject:request forKey:[ NSNumber numberWithInteger:chcomp ]];
         [ m_pendingMutex unlock ];
         
         if (!m_connecting) {
@@ -292,10 +296,11 @@ static NSMutableDictionary *m_availableSockets = nil;
             [ self connectSocketWithHost:m_host port:m_port ];
         }
     } else {
+		[ m_pendingOpenRequests setObject:request forKey:[ NSNumber numberWithInteger:chcomp ]];
         [ m_pendingMutex unlock ];
         
 #ifdef HYDNADEBUG
-        NSLog(@"ExtSocket: The socket was already connected, sending the new open request");
+		debugPrint(@"ExtSocket", chcomp, @"The socket was already connected, sending the new open request");
 #endif
         [ self writeBytes:[ request packet ]];
         [ request setSent:YES ];
@@ -307,8 +312,8 @@ static NSMutableDictionary *m_availableSockets = nil;
 - (BOOL) cancelOpen:(OpenRequest*)request
 {
     NSNumber *streamcomp = [ NSNumber numberWithInteger:[ request ch ]];
-    NSMutableArray *queue;
-    NSMutableArray *tmp;
+    NSMutableArray *queue = nil;
+    NSMutableArray *tmp = [[ NSMutableArray alloc ] init ];
     BOOL found = NO;
     
     if ([ request sent ]) {
@@ -369,7 +374,7 @@ static NSMutableDictionary *m_availableSockets = nil;
     NSString *address = @"";
     
 #ifdef HYDNADEBUG
-    NSLog(@"ExtSocket: Connecting socket");
+	debugPrint(@"ExtSocket", 0, @"Connecting socket");
 #endif
     
     for (NSString *a in addresses) {
@@ -419,7 +424,7 @@ static NSMutableDictionary *m_availableSockets = nil;
 - (void) connectHandler
 {
 #ifdef HYDNADEBUG
-    NSLog(@"ExtSocket: Socket connected, sending handshake");
+	debugPrint(@"ExtSocket", 0, @"Socket connected, sending handshake");
 #endif
     
     NSUInteger length = [ m_host length ];
@@ -462,7 +467,7 @@ static NSMutableDictionary *m_availableSockets = nil;
     NSString *prefix = @"DNA1";
     
 #ifdef HYDNADEBUG
-    NSLog(@"ExtSocket: Incoming handshake response on socket");
+	debugPrint(@"ExtSocket", 0, @"Incoming handshake response on socket");
 #endif
     
     while (offset < HANDSHAKE_RESP_SIZE && n != 0) {
@@ -492,7 +497,7 @@ static NSMutableDictionary *m_availableSockets = nil;
     m_connecting = NO;
     
 #ifdef HYDNADEBUG
-    NSLog(@"ExtSocket: Handshake done on socket");
+	debugPrint(@"ExtSocket", 0, @"Handshake done on socket");
 #endif
     
     for (NSString *key in m_pendingOpenRequests) {
@@ -502,7 +507,7 @@ static NSMutableDictionary *m_availableSockets = nil;
         if (m_connected) {
             [ request setSent:YES ];
 #ifdef HYDNADEBUG
-            NSLog(@"ExtSocket: Open request sent");
+			debugPrint(@"ExtSocket", [ request ch ], @"Open request sent");
 #endif
         } else {
             return;
@@ -511,7 +516,7 @@ static NSMutableDictionary *m_availableSockets = nil;
     }
     
 #ifdef HYDNADEBUG
-    NSLog(@"ExtSocket: Creating a new thread for packet listening");
+	debugPrint(@"ExtSocket", 0, @"Creating a new thread for packet listening");
 #endif
     
     [NSThread detachNewThreadSelector:@selector(listen:) toTarget:self withObject:nil];
@@ -595,21 +600,21 @@ static NSMutableDictionary *m_availableSockets = nil;
         switch (op) {
             case OPEN:
 #ifdef HYDNADEBUG
-                NSLog(@"ExtSocket: Received open response");
+				debugPrint(@"ExtSocket", ch, @"Received open response");
 #endif
                 [ self processOpenPacketWithChannel:ch errcode:flag payload:data ];
                 break;
                 
             case DATA:
 #ifdef HYDNADEBUG
-                NSLog(@"ExtSocket: Received data");
+				debugPrint(@"ExtSocket", ch, @"Received data");
 #endif
                 [ self processDataPacketWithChannel:ch priority:flag payload:data ];
                 break;
                 
             case SIGNAL:
 #ifdef HYDNADEBUG
-                NSLog(@"ExtSocket: Received signal");
+				debugPrint(@"ExtSocket", ch, @"Received signal");
 #endif
                 [ self processSignalPacketWithChannel:ch flag:flag payload:data ];
                 break;
@@ -619,14 +624,14 @@ static NSMutableDictionary *m_availableSockets = nil;
         n = 1;
     }
 #ifdef HYDNADEBUG
-    NSLog(@"ExtSocket: Listening thread exited");
+	debugPrint(@"ExtSocket", 0, @"Listening thread exited");
 #endif
     [ pool release ];
 }
 
 - (void) processOpenPacketWithChannel:(NSUInteger)ch errcode:(NSInteger)errcode payload:(NSData*)payload
 {
-    OpenRequest *request;
+    OpenRequest *request = nil;
     Stream *stream;
     NSUInteger respch = 0;
     
@@ -635,7 +640,7 @@ static NSMutableDictionary *m_availableSockets = nil;
     [ m_pendingMutex unlock ];
     
     if (!request) {
-        [ self destroy:@"The server sent a invalid open packet" ];
+        [ self destroy:@"The server sent an invalid open packet" ];
         return;
     }
     
@@ -654,8 +659,8 @@ static NSMutableDictionary *m_availableSockets = nil;
         respch = ntohl(*(unsigned int*)&data[0]);
         
 #ifdef HYDNADEBUG
-        NSLog(@"ExtSocket: Redirected from %u", ch);
-        NSLog(@"                        to %u", respch);
+		debugPrint(@"ExtSocket",     ch, [ NSString stringWithFormat:@"Redirected from %u", ch]);
+		debugPrint(@"ExtSocket", respch, [ NSString stringWithFormat:@"             to %u", respch ]);
 #endif
     } else {
         [ m_pendingMutex lock ];
@@ -674,7 +679,7 @@ static NSMutableDictionary *m_availableSockets = nil;
         }
 
 #ifdef HYDNADEBUG
-        NSLog(@"ExtSocket: The server rejected the open request, errorcode %i", errcode);
+		debugPrint(@"ExtSocket", ch, [ NSString stringWithFormat:@"The server rejected the open request, errorcode %i", errcode ]);
 #endif
         [ stream destroy:[ StreamError fromOpenError:errcode data:m ]];
         return;
@@ -690,8 +695,8 @@ static NSMutableDictionary *m_availableSockets = nil;
     [ m_openStreams setObject:stream forKey:[ NSNumber numberWithInteger:respch ]];
     
 #ifdef HYDNADEBUG
-    NSLog(@"ExtSocket: A new stream was added");
-    NSLog(@"ExtSocket: The size of openStream is now %i", [ m_openStreams count ]);
+	debugPrint(@"ExtSocket", respch, @"A new stream was added");
+	debugPrint(@"ExtSocket", respch, [ NSString stringWithFormat:@"The size of openStream is now %i", [ m_openStreams count ]]);
 #endif
     [ m_openStreamsMutex unlock ];
     
@@ -862,15 +867,18 @@ static NSMutableDictionary *m_availableSockets = nil;
     [ m_destroyingMutex unlock ];
     
 #ifdef HYDNADEBUG
-    NSLog(@"ExtSocket: Destroying socket because: %@", error);
+	debugPrint(@"ExtSocket", 0, [ NSString stringWithFormat:@"Destroying socket because: %@", error ]);
 #endif
     
     [ m_pendingMutex lock ];
 #ifdef HYDNADEBUG
-    NSLog(@"ExtSocket: Destroying pendingOpenRequests of size %i", [ m_pendingOpenRequests count ]);
+	debugPrint(@"ExtSocket", 0, [ NSString stringWithFormat:@"Destroying pendingOpenRequests of size %i", [ m_pendingOpenRequests count ]]);
 #endif
     
     for (NSNumber *key in m_pendingOpenRequests) {
+#ifdef HYDNADEBUG
+		debugPrint(@"ExtSocket", [ key intValue ], @"Destroying channel");
+#endif
         [[[ m_pendingOpenRequests objectForKey:key ] stream ] destroy:error ];
     }
     [ m_pendingOpenRequests removeAllObjects ];
@@ -878,7 +886,7 @@ static NSMutableDictionary *m_availableSockets = nil;
     
     [ m_openWaitMutex lock ];
 #ifdef HYDNADEBUG
-    NSLog(@"ExtSocket: Destroying waitQueue of size %i", [ m_openWaitQueue count ]);
+	debugPrint(@"ExtSocket", 0, [ NSString stringWithFormat:@"Destroying waitQueue of size %i", [ m_openWaitQueue count ]]);
 #endif
     
     for (NSNumber *key in m_openWaitQueue) {
@@ -894,12 +902,12 @@ static NSMutableDictionary *m_availableSockets = nil;
     
     [ m_openStreamsMutex lock ];
 #ifdef HYDNADEBUG
-    NSLog(@"ExtSocket: Destroying openStreams of size %i", [ m_openStreams count ]);
+	debugPrint(@"ExtSocket", 0, [ NSString stringWithFormat:@"Destroying openStreams of size %i", [ m_openStreams count ]]);
 #endif
     
     for (NSNumber *key in m_openStreams) {
 #ifdef HYDNADEBUG
-        NSLog(@"ExtSocket: Destroying stream of key %@", key);
+		debugPrint(@"ExtSocket", [ key intValue ], @"Destroying channel");
 #endif
         [[ m_openStreams objectForKey:key ] destroy:error ];
     }
@@ -908,7 +916,7 @@ static NSMutableDictionary *m_availableSockets = nil;
     
     if (m_connected) {
 #ifdef HYDNADEBUG
-        NSLog(@"ExtSocket: Closing socket");
+		debugPrint(@"ExtSocket", 0, @"Closing socket");
 #endif
         [ m_listeningMutex lock ];
         m_listening = NO;
@@ -930,7 +938,7 @@ static NSMutableDictionary *m_availableSockets = nil;
     [ m_socketMutex unlock ];
     
 #ifdef HYDNADEBUG
-    NSLog(@"ExtSocket: Destroying socket done");
+	debugPrint(@"ExtSocket", 0, @"Destroying socket done");
 #endif
     
     [ m_destroyingMutex lock ];

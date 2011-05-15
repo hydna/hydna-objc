@@ -5,6 +5,10 @@
 
 #import "Stream.h"
 
+#ifdef HYDNADEBUG
+#import "DebugHelper.h"
+#endif
+
 @implementation Stream
 
 - (id) init
@@ -313,7 +317,7 @@
 		
 		@try {
 #ifdef HYDNADEBUG
-			NSLog(@"Stream: Sending close signal");	
+			debugPrint(@"ExtSocket", m_ch, @"Sending close signal");
 #endif
 			
 			[ m_connectMutex lock ];
@@ -356,7 +360,7 @@
 		
 		@try {
 #ifdef HYDNADEBUG
-			NSLog(@"Stream: Sending close signal");	
+			debugPrint(@"ExtSocket", m_ch, @"Sending close signal");
 #endif
 			
 			[ m_connectMutex lock ];
