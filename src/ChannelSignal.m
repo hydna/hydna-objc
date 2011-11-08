@@ -1,12 +1,12 @@
 //
-//  StreamSignal.m
+//  ChannelSignal.m
 //  hydna-objc
 //
 
-#import "StreamSignal.h"
+#import "ChannelSignal.h"
 
 
-@implementation StreamSignal
+@implementation ChannelSignal
 
 - (id) initWithType:(NSInteger)type content:(NSData*)content
 {

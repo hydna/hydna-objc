@@ -1,5 +1,5 @@
 //
-//  Stream.h
+//  Channel.h
 //  hydna-objc
 //
 
@@ -7,8 +7,8 @@
 
 #import "ExtSocket.h"
 #import "OpenRequest.h"
-#import "StreamData.h"
-#import "StreamSignal.h"
+#import "ChannelData.h"
+#import "ChannelSignal.h"
 
 typedef enum {
     LISTEN = 0x00,
@@ -19,14 +19,14 @@ typedef enum {
     READEMIT = 0x05,
     WRITEEMIT = 0x06,
     READWRITEEMIT = 0x07
-} StreamMode;
+} ChannelMode;
 
 /**
  *  This class is used as an interface to the library.
  *  A user of the library should use an instance of this class
  *  to communicate with a server.
  */
-@interface Stream : NSObject {
+@interface Channel : NSObject {
     NSString *m_host;
     NSUInteger m_port;
     NSUInteger m_ch;
@@ -55,44 +55,44 @@ typedef enum {
 }
 
 /**
- *  Initializes a new Stream instance
+ *  Initializes a new Channel instance
  */
 - (id) init;
 
 - (void) dealloc;
 
 /**
- *  Checks the connected state for this Stream instance.
+ *  Checks the connected state for this Channel instance.
  *
  *  @return The connected state.
  */
 - (BOOL) isConnected;
 
 /**
- *  Checks the closing state for this Stream instance.
+ *  Checks the closing state for this Channel instance.
  *
  *  @return The closing state.
  */
 - (BOOL) isClosing;
 
 /**
- *  Checks if the stream is readable.
+ *  Checks if the channel is readable.
  *
- *  @return YES if stream is readable.
+ *  @return YES if channel is readable.
  */
 - (BOOL) isReadable;
 
 /**
- *  Checks if the stream is writable.
+ *  Checks if the channel is writable.
  *
- *  @return YES if stream is writable.
+ *  @return YES if channel is writable.
  */
 - (BOOL) isWritable;
 
 /**
- *  Checks if the stream can emit signals.
+ *  Checks if the channel can emit signals.
  *
- *  @return YES if stream has signal support.
+ *  @return YES if channel has signal support.
  */
 - (BOOL) hasSignalSupport;
 
@@ -106,19 +106,19 @@ typedef enum {
 /**
  *  Resets the error.
  *  
- *  Connects the stream to the specified channel. If the connection fails 
+ *  Connects the channel to the specified channel. If the connection fails 
  *  immediately, an exception is thrown.
  *
  *  @param expr The channel to connect to,
- *  @param mode The mode in which to open the stream.
+ *  @param mode The mode in which to open the channel.
  *  @param token An optional token.
  */
 - (void) connect:(NSString*)expr mode:(NSUInteger)mode token:(NSData*)token;
 
 /**
- *  Sends data to the stream.
+ *  Sends data to the channel.
  *
- *  @param data The data to write to the stream.
+ *  @param data The data to write to the channel.
  *  @param priority The priority of the data.
  */
 - (void) writeBytes:(NSData*)data priority:(NSUInteger)priority;
@@ -126,21 +126,21 @@ typedef enum {
 /**
  *  Calls writeBytes:priority: with a priority of 1.
  *
- *  @param data The data to write to the stream.
+ *  @param data The data to write to the channel.
  */
 - (void) writeBytes:(NSData*)data;
 
 /**
- *  Sends string data to the stream.
+ *  Sends string data to the channel.
  *
  *  @param value The string to be sent.
  */
 - (void) writeString:(NSString*)string;
 
 /**
- *  Sends data signal to the stream.
+ *  Sends data signal to the channel.
  *
- *  @param data The data to write to the stream.
+ *  @param data The data to write to the channel.
  *  @param type The type of the signal.
  */
 - (void) emitBytes:(NSData*)data type:(NSUInteger)type;
@@ -148,12 +148,12 @@ typedef enum {
 /**
  *  Calls emitBytes:type: with the type 0.
  *
- *  @param data The data to write to the stream.
+ *  @param data The data to write to the channel.
  */
 - (void) emitBytes:(NSData*)data;
 
 /**
- *  Sends a string signal to the stream.
+ *  Sends a string signal to the channel.
  *
  *  @param value The string to be sent.
  *  @param type The type of the signal.
@@ -168,7 +168,7 @@ typedef enum {
 - (void) emitString:(NSString*)string;
 
 /**
- *  Closes the Stream instance.
+ *  Closes the Channel instance.
  */
 - (void) close;
 
@@ -181,10 +181,10 @@ typedef enum {
 - (void) openSuccess:(NSUInteger)respch;
 
 /**
- *  Checks if some error has occured in the stream
+ *  Checks if some error has occured in the channel
  *  and throws an exception if that is the case.
  */
-- (void) checkForStreamError;
+- (void) checkForChannelError;
 
 /**
  *  Internally destroy socket.
@@ -198,7 +198,7 @@ typedef enum {
  *
  *  @param data The data to add to queue.
  */
-- (void) addData:(StreamData *)data;
+- (void) addData:(ChannelData *)data;
 
 /**
  *  Pop the next data in the data queue.
@@ -206,7 +206,7 @@ typedef enum {
  *  @return The data that was removed from the queue,
  *          or nil if the queue was empty.
  */
-- (StreamData*) popData;
+- (ChannelData*) popData;
 
 /**
  *  Checks if the signal queue is empty.
@@ -220,7 +220,7 @@ typedef enum {
  *
  *  @param signal The signal to add to the queue.
  */
-- (void) addSignal:(StreamSignal *)signal;
+- (void) addSignal:(ChannelSignal *)signal;
 
 /**
  *  Pop the next signal in the signal queue.
@@ -228,7 +228,7 @@ typedef enum {
  *  @return The signal that was removed from the queue,
  *          or nil if the queue was empty.
  */
-- (StreamSignal*) popSignal;
+- (ChannelSignal*) popSignal;
 
 /**
  *  Checks if the signal queue is empty.

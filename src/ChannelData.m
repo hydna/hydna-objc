@@ -1,12 +1,12 @@
 //
-//  StreamData.m
+//  ChannelData.m
 //  hydna-objc
 //
 
-#import "StreamData.h"
+#import "ChannelData.h"
 
 
-@implementation StreamData
+@implementation ChannelData
 
 - (id) initWithPriority:(NSInteger)priority content:(NSData*)content
 {

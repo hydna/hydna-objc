@@ -7,8 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		2931A1141315A6DA003CEE46 /* StreamError.h in Headers */ = {isa = PBXBuildFile; fileRef = 2931A1121315A6DA003CEE46 /* StreamError.h */; };
-		2931A1151315A6DA003CEE46 /* StreamError.m in Sources */ = {isa = PBXBuildFile; fileRef = 2931A1131315A6DA003CEE46 /* StreamError.m */; };
+		2931A1141315A6DA003CEE46 /* ChannelError.h in Headers */ = {isa = PBXBuildFile; fileRef = 2931A1121315A6DA003CEE46 /* ChannelError.h */; };
+		2931A1151315A6DA003CEE46 /* ChannelError.m in Sources */ = {isa = PBXBuildFile; fileRef = 2931A1131315A6DA003CEE46 /* ChannelError.m */; };
 		2931A2141316F947003CEE46 /* hello-world.m in Sources */ = {isa = PBXBuildFile; fileRef = 2931A1D81316F75E003CEE46 /* hello-world.m */; };
 		2931A26D1316FF7A003CEE46 /* hydna-objc.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8DC2EF5B0486A6940098B216 /* hydna-objc.framework */; };
 		2931A5C013183753003CEE46 /* hydna-objc.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8DC2EF5B0486A6940098B216 /* hydna-objc.framework */; };
@@ -17,20 +17,20 @@
 		2931A7561318E27A003CEE46 /* speed-test.m in Sources */ = {isa = PBXBuildFile; fileRef = 2931A7551318E27A003CEE46 /* speed-test.m */; };
 		2931A7E21318FC84003CEE46 /* hydna-objc.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8DC2EF5B0486A6940098B216 /* hydna-objc.framework */; };
 		2931A7E41318FC94003CEE46 /* listener.m in Sources */ = {isa = PBXBuildFile; fileRef = 2931A7E31318FC94003CEE46 /* listener.m */; };
-		2932080B1304623B00D9DE1E /* StreamData.h in Headers */ = {isa = PBXBuildFile; fileRef = 293208091304623B00D9DE1E /* StreamData.h */; };
-		2932080C1304623B00D9DE1E /* StreamData.m in Sources */ = {isa = PBXBuildFile; fileRef = 2932080A1304623B00D9DE1E /* StreamData.m */; };
-		2932084313047D3B00D9DE1E /* StreamSignal.h in Headers */ = {isa = PBXBuildFile; fileRef = 2932084113047D3B00D9DE1E /* StreamSignal.h */; };
-		2932084413047D3B00D9DE1E /* StreamSignal.m in Sources */ = {isa = PBXBuildFile; fileRef = 2932084213047D3B00D9DE1E /* StreamSignal.m */; };
+		2932080B1304623B00D9DE1E /* ChannelData.h in Headers */ = {isa = PBXBuildFile; fileRef = 293208091304623B00D9DE1E /* ChannelData.h */; };
+		2932080C1304623B00D9DE1E /* ChannelData.m in Sources */ = {isa = PBXBuildFile; fileRef = 2932080A1304623B00D9DE1E /* ChannelData.m */; };
+		2932084313047D3B00D9DE1E /* ChannelSignal.h in Headers */ = {isa = PBXBuildFile; fileRef = 2932084113047D3B00D9DE1E /* ChannelSignal.h */; };
+		2932084413047D3B00D9DE1E /* ChannelSignal.m in Sources */ = {isa = PBXBuildFile; fileRef = 2932084213047D3B00D9DE1E /* ChannelSignal.m */; };
 		293208581304800E00D9DE1E /* OpenRequest.h in Headers */ = {isa = PBXBuildFile; fileRef = 293208561304800E00D9DE1E /* OpenRequest.h */; };
 		293208591304800E00D9DE1E /* OpenRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 293208571304800E00D9DE1E /* OpenRequest.m */; };
-		293208641304820800D9DE1E /* Stream.h in Headers */ = {isa = PBXBuildFile; fileRef = 293208621304820800D9DE1E /* Stream.h */; };
-		293208651304820800D9DE1E /* Stream.m in Sources */ = {isa = PBXBuildFile; fileRef = 293208631304820800D9DE1E /* Stream.m */; };
+		293208641304820800D9DE1E /* Channel.h in Headers */ = {isa = PBXBuildFile; fileRef = 293208621304820800D9DE1E /* Channel.h */; };
+		293208651304820800D9DE1E /* Channel.m in Sources */ = {isa = PBXBuildFile; fileRef = 293208631304820800D9DE1E /* Channel.m */; };
 		293208681304821F00D9DE1E /* ExtSocket.h in Headers */ = {isa = PBXBuildFile; fileRef = 293208661304821F00D9DE1E /* ExtSocket.h */; };
 		293208691304821F00D9DE1E /* ExtSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = 293208671304821F00D9DE1E /* ExtSocket.m */; };
 		2932086C1304822E00D9DE1E /* Packet.h in Headers */ = {isa = PBXBuildFile; fileRef = 2932086A1304822E00D9DE1E /* Packet.h */; };
 		2932086D1304822E00D9DE1E /* Packet.m in Sources */ = {isa = PBXBuildFile; fileRef = 2932086B1304822E00D9DE1E /* Packet.m */; };
 		88F3BF0A137EA88E00BE169C /* hydna-objc.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8DC2EF5B0486A6940098B216 /* hydna-objc.framework */; };
-		88F3BF0B137EA89500BE169C /* multiple-streams.m in Sources */ = {isa = PBXBuildFile; fileRef = 88F3BEFB137EA85700BE169C /* multiple-streams.m */; };
+		88F3BF0B137EA89500BE169C /* multiple-channels.m in Sources */ = {isa = PBXBuildFile; fileRef = 88F3BEFB137EA85700BE169C /* multiple-channels.m */; };
 		88F3BF54137EB3C900BE169C /* DebugHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = 88F3BF52137EB3C900BE169C /* DebugHelper.h */; };
 		88F3BF55137EB3C900BE169C /* DebugHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 88F3BF53137EB3C900BE169C /* DebugHelper.m */; };
 		8DC2EF530486A6940098B216 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C1666FE841158C02AAC07 /* InfoPlist.strings */; };
@@ -80,8 +80,8 @@
 		0867D6A5FE840307C02AAC07 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		089C1667FE841158C02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		1058C7B1FEA5585E11CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
-		2931A1121315A6DA003CEE46 /* StreamError.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = StreamError.h; path = src/StreamError.h; sourceTree = "<group>"; };
-		2931A1131315A6DA003CEE46 /* StreamError.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = StreamError.m; path = src/StreamError.m; sourceTree = "<group>"; };
+		2931A1121315A6DA003CEE46 /* ChannelError.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ChannelError.h; path = src/ChannelError.h; sourceTree = "<group>"; };
+		2931A1131315A6DA003CEE46 /* ChannelError.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = ChannelError.m; path = src/ChannelError.m; sourceTree = "<group>"; };
 		2931A1D81316F75E003CEE46 /* hello-world.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "hello-world.m"; path = "examples/hello-world.m"; sourceTree = "<group>"; };
 		2931A2081316F906003CEE46 /* hello-world */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "hello-world"; sourceTree = BUILT_PRODUCTS_DIR; };
 		2931A5BA13183749003CEE46 /* signals */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = signals; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -90,20 +90,20 @@
 		2931A7551318E27A003CEE46 /* speed-test.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "speed-test.m"; path = "examples/speed-test.m"; sourceTree = "<group>"; };
 		2931A7DC1318FC7D003CEE46 /* listener */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = listener; sourceTree = BUILT_PRODUCTS_DIR; };
 		2931A7E31318FC94003CEE46 /* listener.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = listener.m; path = examples/listener.m; sourceTree = "<group>"; };
-		293208091304623B00D9DE1E /* StreamData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = StreamData.h; path = src/StreamData.h; sourceTree = "<group>"; };
-		2932080A1304623B00D9DE1E /* StreamData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = StreamData.m; path = src/StreamData.m; sourceTree = "<group>"; };
-		2932084113047D3B00D9DE1E /* StreamSignal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = StreamSignal.h; path = src/StreamSignal.h; sourceTree = "<group>"; };
-		2932084213047D3B00D9DE1E /* StreamSignal.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = StreamSignal.m; path = src/StreamSignal.m; sourceTree = "<group>"; };
+		293208091304623B00D9DE1E /* ChannelData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ChannelData.h; path = src/ChannelData.h; sourceTree = "<group>"; };
+		2932080A1304623B00D9DE1E /* ChannelData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = ChannelData.m; path = src/ChannelData.m; sourceTree = "<group>"; };
+		2932084113047D3B00D9DE1E /* ChannelSignal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ChannelSignal.h; path = src/ChannelSignal.h; sourceTree = "<group>"; };
+		2932084213047D3B00D9DE1E /* ChannelSignal.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = ChannelSignal.m; path = src/ChannelSignal.m; sourceTree = "<group>"; };
 		293208561304800E00D9DE1E /* OpenRequest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OpenRequest.h; path = src/OpenRequest.h; sourceTree = "<group>"; };
 		293208571304800E00D9DE1E /* OpenRequest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = OpenRequest.m; path = src/OpenRequest.m; sourceTree = "<group>"; };
-		293208621304820800D9DE1E /* Stream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Stream.h; path = src/Stream.h; sourceTree = "<group>"; };
-		293208631304820800D9DE1E /* Stream.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = Stream.m; path = src/Stream.m; sourceTree = "<group>"; };
+		293208621304820800D9DE1E /* Channel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Channel.h; path = src/Channel.h; sourceTree = "<group>"; };
+		293208631304820800D9DE1E /* Channel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = Channel.m; path = src/Channel.m; sourceTree = "<group>"; };
 		293208661304821F00D9DE1E /* ExtSocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ExtSocket.h; path = src/ExtSocket.h; sourceTree = "<group>"; };
 		293208671304821F00D9DE1E /* ExtSocket.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = ExtSocket.m; path = src/ExtSocket.m; sourceTree = "<group>"; };
 		2932086A1304822E00D9DE1E /* Packet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Packet.h; path = src/Packet.h; sourceTree = "<group>"; };
 		2932086B1304822E00D9DE1E /* Packet.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = Packet.m; path = src/Packet.m; sourceTree = "<group>"; };
 		32DBCF5E0370ADEE00C91783 /* hydna-objc_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "hydna-objc_Prefix.pch"; sourceTree = "<group>"; };
-		88F3BEFB137EA85700BE169C /* multiple-streams.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "multiple-streams.m"; path = "examples/multiple-streams.m"; sourceTree = "<group>"; };
+		88F3BEFB137EA85700BE169C /* multiple-channels.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "multiple-channels.m"; path = "examples/multiple-channels.m"; sourceTree = "<group>"; };
 		88F3BF02137EA86700BE169C /* multiple-streams */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "multiple-streams"; sourceTree = BUILT_PRODUCTS_DIR; };
 		88F3BF52137EB3C900BE169C /* DebugHelper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DebugHelper.h; path = src/DebugHelper.h; sourceTree = "<group>"; };
 		88F3BF53137EB3C900BE169C /* DebugHelper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DebugHelper.m; path = src/DebugHelper.m; sourceTree = "<group>"; };
@@ -217,14 +217,14 @@
 				293208571304800E00D9DE1E /* OpenRequest.m */,
 				2932086A1304822E00D9DE1E /* Packet.h */,
 				2932086B1304822E00D9DE1E /* Packet.m */,
-				293208621304820800D9DE1E /* Stream.h */,
-				293208631304820800D9DE1E /* Stream.m */,
-				293208091304623B00D9DE1E /* StreamData.h */,
-				2932080A1304623B00D9DE1E /* StreamData.m */,
-				2931A1121315A6DA003CEE46 /* StreamError.h */,
-				2931A1131315A6DA003CEE46 /* StreamError.m */,
-				2932084113047D3B00D9DE1E /* StreamSignal.h */,
-				2932084213047D3B00D9DE1E /* StreamSignal.m */,
+				293208621304820800D9DE1E /* Channel.h */,
+				293208631304820800D9DE1E /* Channel.m */,
+				293208091304623B00D9DE1E /* ChannelData.h */,
+				2932080A1304623B00D9DE1E /* ChannelData.m */,
+				2931A1121315A6DA003CEE46 /* ChannelError.h */,
+				2931A1131315A6DA003CEE46 /* ChannelError.m */,
+				2932084113047D3B00D9DE1E /* ChannelSignal.h */,
+				2932084213047D3B00D9DE1E /* ChannelSignal.m */,
 				88F3BF52137EB3C900BE169C /* DebugHelper.h */,
 				88F3BF53137EB3C900BE169C /* DebugHelper.m */,
 			);
@@ -256,7 +256,7 @@
 				2931A5C113183767003CEE46 /* signals.m */,
 				2931A7551318E27A003CEE46 /* speed-test.m */,
 				2931A7E31318FC94003CEE46 /* listener.m */,
-				88F3BEFB137EA85700BE169C /* multiple-streams.m */,
+				88F3BEFB137EA85700BE169C /* multiple-channels.m */,
 			);
 			name = Examples;
 			sourceTree = "<group>";
@@ -276,13 +276,13 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2932080B1304623B00D9DE1E /* StreamData.h in Headers */,
-				2932084313047D3B00D9DE1E /* StreamSignal.h in Headers */,
+				2932080B1304623B00D9DE1E /* ChannelData.h in Headers */,
+				2932084313047D3B00D9DE1E /* ChannelSignal.h in Headers */,
 				293208581304800E00D9DE1E /* OpenRequest.h in Headers */,
-				293208641304820800D9DE1E /* Stream.h in Headers */,
+				293208641304820800D9DE1E /* Channel.h in Headers */,
 				293208681304821F00D9DE1E /* ExtSocket.h in Headers */,
 				2932086C1304822E00D9DE1E /* Packet.h in Headers */,
-				2931A1141315A6DA003CEE46 /* StreamError.h in Headers */,
+				2931A1141315A6DA003CEE46 /* ChannelError.h in Headers */,
 				88F3BF54137EB3C900BE169C /* DebugHelper.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -472,7 +472,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				88F3BF0B137EA89500BE169C /* multiple-streams.m in Sources */,
+				88F3BF0B137EA89500BE169C /* multiple-channels.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -480,13 +480,13 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2932080C1304623B00D9DE1E /* StreamData.m in Sources */,
-				2932084413047D3B00D9DE1E /* StreamSignal.m in Sources */,
+				2932080C1304623B00D9DE1E /* ChannelData.m in Sources */,
+				2932084413047D3B00D9DE1E /* ChannelSignal.m in Sources */,
 				293208591304800E00D9DE1E /* OpenRequest.m in Sources */,
-				293208651304820800D9DE1E /* Stream.m in Sources */,
+				293208651304820800D9DE1E /* Channel.m in Sources */,
 				293208691304821F00D9DE1E /* ExtSocket.m in Sources */,
 				2932086D1304822E00D9DE1E /* Packet.m in Sources */,
-				2931A1151315A6DA003CEE46 /* StreamError.m in Sources */,
+				2931A1151315A6DA003CEE46 /* ChannelError.m in Sources */,
 				88F3BF55137EB3C900BE169C /* DebugHelper.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

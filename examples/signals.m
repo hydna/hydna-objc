@@ -3,26 +3,26 @@
 //  hydna-objc
 //
 
-#import "Stream.h"
-#import "StreamSignal.h"
+#import "Channel.h"
+#import "ChannelSignal.h"
 
 int main(int argc, const char* argv[])
 {
     NSAutoreleasePool *pool = [[ NSAutoreleasePool alloc ] init ];
     
-    Stream *stream = [[ Stream alloc ] init ];
-    [ stream connect:@"localhost/x00112233" mode:READWRITEEMIT token:nil ];
+    Channel *channel = [[ Channel alloc ] init ];
+    [ channel connect:@"localhost/x00112233" mode:READWRITEEMIT token:nil ];
     
-    while (![ stream isConnected ]) {
-        [ stream checkForStreamError ];
+    while (![ channel isConnected ]) {
+        [ channel checkForChannelError ];
         sleep(1);
     }
     
-    [ stream emitString:@"ping" ];
+    [ channel emitString:@"ping" ];
     
     for (;;) {
-        if (![ stream isSignalEmpty ]) {
-            StreamSignal* signal = [ stream popSignal ];
+        if (![ channel isSignalEmpty ]) {
+            ChannelSignal* signal = [ channel popSignal ];
             NSData *payload = [ signal content ];
             
             NSString *message = [[ NSString alloc ] initWithData:payload encoding:NSUTF8StringEncoding];
@@ -31,11 +31,11 @@ int main(int argc, const char* argv[])
             [ message release ];
             break;
         } else {
-            [ stream checkForStreamError ];
+            [ channel checkForChannelError ];
         }
     }
     
-    [ stream close ];
-    [ stream release ];
+    [ channel close ];
+    [ channel release ];
     [ pool release ];
 }

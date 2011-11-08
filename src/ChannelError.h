@@ -1,12 +1,12 @@
 //
-//  StreamError.h
+//  ChannelError.h
 //  hydna-objc
 //
 
 #import <Cocoa/Cocoa.h>
 
 
-@interface StreamError : NSObject
+@interface ChannelError : NSObject
 
 + (NSString*) fromHandshakeError:(NSInteger)flag;
 + (NSString*) fromOpenError:(NSInteger)flag data:(NSString*)data;

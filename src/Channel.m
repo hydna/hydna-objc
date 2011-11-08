@@ -1,15 +1,15 @@
 //
-//  Stream.m
+//  Channel.m
 //  hydna-objc
 //
 
-#import "Stream.h"
+#import "Channel.h"
 
 #ifdef HYDNADEBUG
 #import "DebugHelper.h"
 #endif
 
-@implementation Stream
+@implementation Channel
 
 - (id) init
 {
@@ -109,7 +109,7 @@
     [ m_connectMutex unlock ];
     
     if (mode == 0x04 || mode < READ || mode > READWRITEEMIT) {
-        [NSException raise:@"Error" format:@"Invalid stream mode"];
+        [NSException raise:@"Error" format:@"Invalid channel mode"];
     }
     
     if (!expr) {
@@ -168,7 +168,7 @@
     
     m_socket = [ExtSocket getSocketWithHost:m_host port:m_port];
     
-    [ m_socket allocStream ];
+    [ m_socket allocChannel ];
     
     if (token || tokens == @"") {
         packet = [[ Packet alloc ] initWithChannel:m_ch op:OPEN flag:mode payload:token];
@@ -185,8 +185,8 @@
     m_error = @"";
     
     if (![ m_socket requestOpen:request ]) {
-        [ self checkForStreamError ];
-        [NSException raise:@"Error" format:@"Stream already open"];
+        [ self checkForChannelError ];
+        [NSException raise:@"Error" format:@"Channel already open"];
     }
     
     m_openRequest = request;
@@ -199,13 +199,13 @@
     [ m_connectMutex lock ];
     if (!m_connected || !m_socket) {
         [ m_connectMutex unlock ];
-        [ self checkForStreamError ];
-        [NSException raise:@"IOError" format:@"Stream is not conected" ];
+        [ self checkForChannelError ];
+        [NSException raise:@"IOError" format:@"Channel is not conected" ];
     }
     [ m_connectMutex unlock ];
     
     if (!m_writable) {
-        [NSException raise:@"Error" format:@"Stream is not writable" ];
+        [NSException raise:@"Error" format:@"Channel is not writable" ];
     }
     
     if (priority > 3 || priority == 0) {
@@ -220,7 +220,7 @@
     result = [ socket writeBytes:packet ];
     
     if (!result) {
-        [ self checkForStreamError ];
+        [ self checkForChannelError ];
     }
 }
 
@@ -241,8 +241,8 @@
     [ m_connectMutex lock ];
     if (!m_connected || !m_socket) {
         [ m_connectMutex unlock ];
-        [ self checkForStreamError ];
-        [NSException raise:@"IOError" format:@"Stream is not connected"];
+        [ self checkForChannelError ];
+        [NSException raise:@"IOError" format:@"Channel is not connected"];
     }
     [ m_connectMutex unlock ];
     
@@ -258,7 +258,7 @@
     result = [ socket writeBytes:packet ];
     
     if (!result) {
-        [ self checkForStreamError ];
+        [ self checkForChannelError ];
     }
 }
 
@@ -294,7 +294,7 @@
     
     if (m_openRequest && [ m_socket cancelOpen:m_openRequest ]) {
 		// Open request hasn't been posted yet, which means that it's
-		// safe to destroy stream immediately.
+		// safe to destroy channel immediately.
 
 		m_openRequest = nil;
 		[ m_connectMutex unlock ];
@@ -384,12 +384,12 @@
 
 }
 
-- (void) checkForStreamError
+- (void) checkForChannelError
 {
     [ m_connectMutex lock ];
     if (m_error != @"") {
         [ m_connectMutex unlock ];
-        [NSException raise:@"StreamError" format:@"%@", m_error];
+        [NSException raise:@"ChannelError" format:@"%@", m_error];
     } else {
         [ m_connectMutex unlock ];
     }
@@ -412,7 +412,7 @@
 	m_socket = nil;
     
     if (socket) {
-        [ socket deallocStream:connected ? ch : 0 ];
+        [ socket deallocChannel:connected ? ch : 0 ];
     }
     
     m_error = [ error copy ];
@@ -420,14 +420,14 @@
     [ m_connectMutex unlock ];
 }
 
-- (void) addData:(StreamData*)data
+- (void) addData:(ChannelData*)data
 {
     [ m_dataMutex lock ];
     [ m_dataQueue addObject:data ];
     [ m_dataMutex unlock ];
 }
 
-- (StreamData*) popData
+- (ChannelData*) popData
 {
     
     if ([ self isDataEmpty ])
@@ -435,7 +435,7 @@
     
     [ m_dataMutex lock ];
     
-    StreamData* result = [ m_dataQueue objectAtIndex:0 ];
+    ChannelData* result = [ m_dataQueue objectAtIndex:0 ];
     [ m_dataQueue removeObjectAtIndex:0 ];
     
     [ m_dataMutex unlock ];
@@ -450,14 +450,14 @@
     return result;
 }
 
-- (void) addSignal:(StreamSignal*)signal
+- (void) addSignal:(ChannelSignal*)signal
 {
     [ m_signalMutex lock ];
     [ m_signalQueue addObject:signal ];
     [ m_signalMutex unlock ];
 }
 
-- (StreamSignal*) popSignal
+- (ChannelSignal*) popSignal
 {
     
     if ([ self isSignalEmpty ])
@@ -465,7 +465,7 @@
     
     [ m_signalMutex lock ];
     
-    StreamSignal* result = [ m_signalQueue objectAtIndex:0 ];
+    ChannelSignal* result = [ m_signalQueue objectAtIndex:0 ];
     [ m_signalQueue removeObjectAtIndex:0 ];
     
     [ m_signalMutex unlock ];

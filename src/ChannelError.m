@@ -1,15 +1,15 @@
 //
-//  StreamError.m
+//  ChannelError.m
 //  hydna-objc
 //
 //  Created by Emanuel Dahlberg on 2/23/11.
 //  Copyright 2011 __MyCompanyName__. All rights reserved.
 //
 
-#import "StreamError.h"
+#import "ChannelError.h"
 #import "Packet.h"
 
-@implementation StreamError
+@implementation ChannelError
 
 + (NSString*) fromHandshakeError:(NSInteger)flag
 {
@@ -50,30 +50,30 @@
     } else {
         switch (flag) {
             case OPEN_FAIL_NA:
-                msg = @"Failed to open stream, not available";
+                msg = @"Failed to open channel, not available";
                 break;
             case OPEN_FAIL_MODE:
-                msg = @"Not allowed to open stream with specified mode";
+                msg = @"Not allowed to open channel with specified mode";
                 break;
             case OPEN_FAIL_PROTOCOL:
-                msg = @"Not allowed to open stream with specified protocol";
+                msg = @"Not allowed to open channel with specified protocol";
                 break;
             case OPEN_FAIL_HOST:
-                msg = @"Not allowed to open stream from host";
+                msg = @"Not allowed to open channel from host";
                 break;
             case OPEN_FAIL_AUTH:
-                msg = @"Not allowed to open stream with credentials";
+                msg = @"Not allowed to open channel with credentials";
                 break;
             case OPEN_FAIL_SERVICE_NA:
-                msg = @"Failed to open stream, service is not available";
+                msg = @"Failed to open channel, service is not available";
                 break;
             case OPEN_FAIL_SERVICE_ERR:
-                msg = @"Failed to open stream, service error";
+                msg = @"Failed to open channel, service error";
                 break;
                 
             default:
             case OPEN_FAIL_OTHER:
-                msg = @"Failed to open stream, unknown error";
+                msg = @"Failed to open channel, unknown error";
                 break;
         }
     }

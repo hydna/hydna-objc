@@ -12,14 +12,14 @@ extern const int HANDSHAKE_SIZE;
 extern const int HANDSHAKE_RESP_SIZE;
 
 /**
- *  This class is used internally by the Stream class.
+ *  This class is used internally by the Channel class.
  *  A user of the library should not create an instance of this class.
  */
 @interface ExtSocket : NSObject {
-    NSLock *m_streamRefMutex;
+    NSLock *m_channelRefMutex;
     NSLock *m_destroyingMutex;
     NSLock *m_closingMutex;
-    NSLock *m_openStreamsMutex;
+    NSLock *m_openChannelsMutex;
     NSLock *m_openWaitMutex;
     NSLock *m_pendingMutex;
     NSLock *m_listeningMutex;
@@ -36,10 +36,10 @@ extern const int HANDSHAKE_RESP_SIZE;
     NSInteger m_socketFDS;
     
     NSMutableDictionary *m_pendingOpenRequests;
-    NSMutableDictionary *m_openStreams;
+    NSMutableDictionary *m_openChannels;
     NSMutableDictionary *m_openWaitQueue;
     
-    NSInteger m_streamRefCount;
+    NSInteger m_channelRefCount;
 }
 
 /**
@@ -51,7 +51,7 @@ extern const int HANDSHAKE_RESP_SIZE;
 + (id) getSocketWithHost:(NSString*)host port:(NSUInteger)port;
 
 /**
- *  Initializes a new Stream instance.
+ *  Initializes a new Channel instance.
  *
  *  @param host The host the socket should connect to.
  *  @param port The port the socket should connect to.
@@ -68,22 +68,22 @@ extern const int HANDSHAKE_RESP_SIZE;
 - (BOOL) hasHandshaked;
 
 /**
- * Method to keep track of the number of streams that is associated 
+ * Method to keep track of the number of channels that is associated 
  * with this socket instance.
  */
-- (void) allocStream;
+- (void) allocChannel;
 
 /**
  *  Decrease the reference count.
  *
  *  @param ch The channel to dealloc.
  */
-- (void) deallocStream:(NSUInteger)ch;
+- (void) deallocChannel:(NSUInteger)ch;
 
 /**
- *  Request to open a stream.
+ *  Request to open a channel.
  *
- *  @param request The request to open the stream.
+ *  @param request The request to open the channel.
  *  @return YES if request went well, else NO.
  */
 - (BOOL) requestOpen:(OpenRequest*)request;

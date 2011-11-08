@@ -1,12 +1,12 @@
 //
-//  StreamData.h
+//  ChannelData.h
 //  hydna-objc
 //
 
 #import <Cocoa/Cocoa.h>
 
 
-@interface StreamData : NSObject {
+@interface ChannelData : NSObject {
     NSInteger m_priority;
     NSData *m_content;
 }

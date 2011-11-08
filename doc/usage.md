@@ -1,30 +1,30 @@
 # Usage
 
-In the following example we open a read/write stream, send a "Hello world!"
+In the following example we open a read/write channel, send a "Hello world!"
 when the connection has been established and print received messages to
 stdout.
     
     :::objective-c
-    #import "Stream.h"
-    #import "StreamData.h"
+    #import "Channel.h"
+    #import "ChannelData.h"
 
     int main(int argc, const char* argv[])
     {
         NSAutoreleasePool *pool = [[ NSAutoreleasePool alloc ] init ];
         
-        Stream *stream = [[ Stream alloc ] init ];
-        [ stream connect:@"demo.hydna.net/x11221133" mode:READWRITE token:nil ];
+        Channel *channel = [[ Channel alloc ] init ];
+        [ channel connect:@"demo.hydna.net/x11221133" mode:READWRITE token:nil ];
         
-        while (![ stream isConnected ]) {
-            [ stream checkForStreamError ];
+        while (![ channel isConnected ]) {
+            [ channel checkForChannelError ];
             sleep(1);
         }
         
-        [ stream writeString:@"Hello World" ];
+        [ channel writeString:@"Hello World" ];
         
         for (;;) {
-            if (![ stream isDataEmpty ]) {
-                StreamData* data = [ stream popData ];
+            if (![ channel isDataEmpty ]) {
+                ChannelData* data = [ channel popData ];
                 NSData *payload = [ data content ];
                 
                 NSString *message = [[ NSString alloc ]
@@ -34,11 +34,11 @@ stdout.
                 [ message release ];
                 break;
             } else {
-                [ stream checkForStreamError ];
+                [ channel checkForChannelError ];
             }
         }
         
-        [ stream close ];
-        [ stream release ];
+        [ channel close ];
+        [ channel release ];
         [ pool release ];
     }

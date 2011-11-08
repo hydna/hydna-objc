@@ -4,8 +4,8 @@
 //
 
 #import "ExtSocket.h"
-#import "Stream.h"
-#import "StreamError.h"
+#import "Channel.h"
+#import "ChannelError.h"
 
 #ifdef HYDNADEBUG
 #import "DebugHelper.h"
@@ -58,7 +58,7 @@ static NSMutableDictionary *m_availableSockets = nil;
  *  @param errcode The error code of the open packet.
  *  @param payload The content of the open packet.
  */
-- (void) processOpenPacketWithChannel:(NSUInteger)ch errcode:(NSInteger)errcode payload:(NSData *)payload;
+- (void) processOpenPacketWithChannelId:(NSUInteger)ch errcode:(NSInteger)errcode payload:(NSData *)payload;
 
 /**
  *  Process a data packet.
@@ -67,17 +67,17 @@ static NSMutableDictionary *m_availableSockets = nil;
  *  @param priority The priority of the data.
  *  @param payload The content of the data.
  */
-- (void) processDataPacketWithChannel:(NSUInteger)ch priority:(NSInteger)priority payload:(NSData *)payload;
+- (void) processDataPacketWithChannelId:(NSUInteger)ch priority:(NSInteger)priority payload:(NSData *)payload;
 
 /**
  *  Process a signal packet.
  *
- *  @param stream The stream that should receive the signal.
+ *  @param channel The channel that should receive the signal.
  *  @param flag The flag of the signal.
  *  @param payload The content of the signal.
  *  @return NO is something went wrong.
  */
-- (BOOL) processSignalPacketWithStream:(Stream *)stream flag:(NSInteger)flag payload:(NSData *)payload;
+- (BOOL) processSignalPacketWithChannel:(Channel *)channel flag:(NSInteger)flag payload:(NSData *)payload;
 
 /**
  *  Process a signal packet.
@@ -86,7 +86,7 @@ static NSMutableDictionary *m_availableSockets = nil;
  *  @param flag The flag of the signal.
  *  @param payload The content of the signal.
  */
-- (void) processSignalPacketWithChannel:(NSUInteger)ch flag:(NSInteger)flag payload:(NSData *)payload;
+- (void) processSignalPacketWithChannelId:(NSUInteger)ch flag:(NSInteger)flag payload:(NSData *)payload;
 
 /**
  *  Destroy the socket.
@@ -136,10 +136,10 @@ static NSMutableDictionary *m_availableSockets = nil;
         return nil;
     }
     
-    self->m_streamRefMutex = [[ NSLock alloc ] init ];
+    self->m_channelRefMutex = [[ NSLock alloc ] init ];
     self->m_destroyingMutex = [[ NSLock alloc ] init ];
     self->m_closingMutex = [[ NSLock alloc ] init ];
-    self->m_openStreamsMutex = [[ NSLock alloc ] init ];
+    self->m_openChannelsMutex = [[ NSLock alloc ] init ];
     self->m_openWaitMutex = [[ NSLock alloc ] init ];
     self->m_pendingMutex = [[ NSLock alloc ] init ];
     self->m_listeningMutex = [[ NSLock alloc ] init ];
@@ -155,26 +155,26 @@ static NSMutableDictionary *m_availableSockets = nil;
     self->m_port = port;
     
     self->m_pendingOpenRequests = [[ NSMutableDictionary alloc ] init ];
-    self->m_openStreams = [[ NSMutableDictionary alloc ] init ];
+    self->m_openChannels = [[ NSMutableDictionary alloc ] init ];
     self->m_openWaitQueue = [[ NSMutableDictionary alloc ] init ];
     
-    self->m_streamRefCount = 0;
+    self->m_channelRefCount = 0;
     
     return self;
 }
 
 - (void) dealloc
 {
-    [ m_streamRefMutex release ];
+    [ m_channelRefMutex release ];
     [ m_destroyingMutex release ];
     [ m_closingMutex release ];
-    [ m_openStreamsMutex release ];
+    [ m_openChannelsMutex release ];
     [ m_openWaitMutex release ];
     [ m_pendingMutex release ];
     [ m_listeningMutex release ];
     
     [ m_pendingOpenRequests release ];
-    [ m_openStreams release ];
+    [ m_openChannels release ];
     [ m_openWaitQueue release ];
     
     [ super dealloc ];
@@ -185,20 +185,20 @@ static NSMutableDictionary *m_availableSockets = nil;
     return m_handshaked;
 }
 
-- (void) allocStream
+- (void) allocChannel
 {
-    [ m_streamRefMutex lock ];
-    ++m_streamRefCount;
-    [ m_streamRefMutex unlock ];
+    [ m_channelRefMutex lock ];
+    ++m_channelRefCount;
+    [ m_channelRefMutex unlock ];
 #ifdef HYDNADEBUG
-	debugPrint(@"ExtSocket", 0, [NSString stringWithFormat:@"Allocating a new stream, stream ref count is %i", m_streamRefCount]);
+	debugPrint(@"ExtSocket", 0, [NSString stringWithFormat:@"Allocating a new channel, channel ref count is %i", m_channelRefCount]);
 #endif
 }
 
-- (void) deallocStream:(NSUInteger)ch;
+- (void) deallocChannel:(NSUInteger)ch;
 {
 #ifdef HYDNADEBUG
-	debugPrint(@"ExtSocket", ch, @"Deallocatin a stream");
+	debugPrint(@"ExtSocket", ch, @"Deallocatin a channel");
 #endif
     [ m_destroyingMutex lock ];
     [ m_closingMutex lock ];
@@ -206,29 +206,29 @@ static NSMutableDictionary *m_availableSockets = nil;
         [ m_closingMutex unlock ];
         [ m_destroyingMutex unlock ];
         
-        [ m_openStreamsMutex lock ];
-        [ m_openStreams removeObjectForKey:[ NSNumber numberWithInteger:ch ] ];
+        [ m_openChannelsMutex lock ];
+        [ m_openChannels removeObjectForKey:[ NSNumber numberWithInteger:ch ] ];
 #ifdef HYDNADEBUG
-		debugPrint(@"ExtSocket", ch, [NSString stringWithFormat:@"Size of openStreams is now %i", [ m_openStreams count ]]);
+		debugPrint(@"ExtSocket", ch, [NSString stringWithFormat:@"Size of openChannels is now %i", [ m_openChannels count ]]);
 #endif
-        [ m_openStreamsMutex unlock ];
+        [ m_openChannelsMutex unlock ];
     } else {
         [ m_closingMutex unlock ];
         [ m_destroyingMutex unlock ];
     }
 
-    [ m_streamRefMutex lock ];
-    --m_streamRefCount;
-    [ m_streamRefMutex unlock ];
+    [ m_channelRefMutex lock ];
+    --m_channelRefCount;
+    [ m_channelRefMutex unlock ];
     
     [ self checkRefCount ];
 }
 
 - (void) checkRefCount
 {
-    [ m_streamRefMutex lock ];
-    if (m_streamRefCount == 0) {
-        [ m_streamRefMutex unlock ];
+    [ m_channelRefMutex lock ];
+    if (m_channelRefCount == 0) {
+        [ m_channelRefMutex unlock ];
 #ifdef HYDNADEBUG
 		debugPrint(@"ExtSocket", 0, @"No more refs, destroy socket");
 #endif
@@ -243,7 +243,7 @@ static NSMutableDictionary *m_availableSockets = nil;
             [ m_destroyingMutex unlock ];
         }
     } else {
-        [ m_streamRefMutex unlock ];
+        [ m_channelRefMutex unlock ];
     }
 }
 
@@ -253,19 +253,19 @@ static NSMutableDictionary *m_availableSockets = nil;
     NSMutableArray *queue;
     
 #ifdef HYDNADEBUG
-	debugPrint(@"ExtSocket", chcomp, @"A stream is trying to send a new open request");
+	debugPrint(@"ExtSocket", chcomp, @"A channel is trying to send a new open request");
 #endif
     
-    [ m_openStreamsMutex lock ];
-    if ([ m_openStreams objectForKey:[ NSNumber numberWithInteger:chcomp ]] != nil) {
-        [ m_openStreamsMutex unlock ];
+    [ m_openChannelsMutex lock ];
+    if ([ m_openChannels objectForKey:[ NSNumber numberWithInteger:chcomp ]] != nil) {
+        [ m_openChannelsMutex unlock ];
 #ifdef HYDNADEBUG
-		debugPrint(@"ExtSocket", chcomp, @"The stream was already open, cancel the open request");
+		debugPrint(@"ExtSocket", chcomp, @"The channel was already open, cancel the open request");
 #endif
         [ request release ];
         return NO;
     }
-    [ m_openStreamsMutex unlock ];
+    [ m_openChannelsMutex unlock ];
     
     [ m_pendingMutex lock ];
     if ([ m_pendingOpenRequests objectForKey:[ NSNumber numberWithInteger:chcomp ]] != nil) {
@@ -311,7 +311,7 @@ static NSMutableDictionary *m_availableSockets = nil;
 
 - (BOOL) cancelOpen:(OpenRequest*)request
 {
-    NSNumber *streamcomp = [ NSNumber numberWithInteger:[ request ch ]];
+    NSNumber *channelcomp = [ NSNumber numberWithInteger:[ request ch ]];
     NSMutableArray *queue = nil;
     NSMutableArray *tmp = [[ NSMutableArray alloc ] init ];
     BOOL found = NO;
@@ -321,15 +321,15 @@ static NSMutableDictionary *m_availableSockets = nil;
     }
     
     [ m_openWaitMutex lock ];
-    queue = [ m_openWaitQueue objectForKey:streamcomp];
+    queue = [ m_openWaitQueue objectForKey:channelcomp];
     
     [ m_pendingMutex lock ];
-    if ([ m_pendingOpenRequests objectForKey:streamcomp ] != nil) {
-        [[ m_pendingOpenRequests objectForKey:streamcomp ] release ];
-        [ m_pendingOpenRequests removeObjectForKey:streamcomp ];
+    if ([ m_pendingOpenRequests objectForKey:channelcomp ] != nil) {
+        [[ m_pendingOpenRequests objectForKey:channelcomp ] release ];
+        [ m_pendingOpenRequests removeObjectForKey:channelcomp ];
         
         if (queue && [ queue count ] > 0) {
-            [ m_pendingOpenRequests setObject:[ queue objectAtIndex:0 ] forKey:streamcomp ];
+            [ m_pendingOpenRequests setObject:[ queue objectAtIndex:0 ] forKey:channelcomp ];
             [ queue removeObjectAtIndex:0 ];
         }
         
@@ -489,7 +489,7 @@ static NSMutableDictionary *m_availableSockets = nil;
     }
     
     if (responseCode > 0) {
-        [ self destroy:[ StreamError fromHandshakeError:responseCode ]];
+        [ self destroy:[ ChannelError fromHandshakeError:responseCode ]];
         return;
     }
     
@@ -602,21 +602,21 @@ static NSMutableDictionary *m_availableSockets = nil;
 #ifdef HYDNADEBUG
 				debugPrint(@"ExtSocket", ch, @"Received open response");
 #endif
-                [ self processOpenPacketWithChannel:ch errcode:flag payload:data ];
+                [ self processOpenPacketWithChannelId:ch errcode:flag payload:data ];
                 break;
                 
             case DATA:
 #ifdef HYDNADEBUG
 				debugPrint(@"ExtSocket", ch, @"Received data");
 #endif
-                [ self processDataPacketWithChannel:ch priority:flag payload:data ];
+                [ self processDataPacketWithChannelId:ch priority:flag payload:data ];
                 break;
                 
             case SIGNAL:
 #ifdef HYDNADEBUG
 				debugPrint(@"ExtSocket", ch, @"Received signal");
 #endif
-                [ self processSignalPacketWithChannel:ch flag:flag payload:data ];
+                [ self processSignalPacketWithChannelId:ch flag:flag payload:data ];
                 break;
         }
         
@@ -629,10 +629,10 @@ static NSMutableDictionary *m_availableSockets = nil;
     [ pool release ];
 }
 
-- (void) processOpenPacketWithChannel:(NSUInteger)ch errcode:(NSInteger)errcode payload:(NSData*)payload
+- (void) processOpenPacketWithChannelId:(NSUInteger)ch errcode:(NSInteger)errcode payload:(NSData*)payload
 {
     OpenRequest *request = nil;
-    Stream *stream;
+    Channel *channel;
     NSUInteger respch = 0;
     
     [ m_pendingMutex lock ];
@@ -644,7 +644,7 @@ static NSMutableDictionary *m_availableSockets = nil;
         return;
     }
     
-    stream = [ request stream ];
+    channel = [ request channel ];
     
     if (errcode == OPEN_SUCCESS) {
         respch = ch;
@@ -681,32 +681,32 @@ static NSMutableDictionary *m_availableSockets = nil;
 #ifdef HYDNADEBUG
 		debugPrint(@"ExtSocket", ch, [ NSString stringWithFormat:@"The server rejected the open request, errorcode %i", errcode ]);
 #endif
-        [ stream destroy:[ StreamError fromOpenError:errcode data:m ]];
+        [ channel destroy:[ ChannelError fromOpenError:errcode data:m ]];
         return;
     }
 
-    [ m_openStreamsMutex lock ];
-    if ([ m_openStreams objectForKey:[ NSNumber numberWithInteger:respch ]] != nil) {
-        [ m_openStreamsMutex unlock ];
-        [ self destroy:@"Server redirected to  open stream" ];
+    [ m_openChannelsMutex lock ];
+    if ([ m_openChannels objectForKey:[ NSNumber numberWithInteger:respch ]] != nil) {
+        [ m_openChannelsMutex unlock ];
+        [ self destroy:@"Server redirected to  open channel" ];
         return;
     }
     
-    [ m_openStreams setObject:stream forKey:[ NSNumber numberWithInteger:respch ]];
+    [ m_openChannels setObject:channel forKey:[ NSNumber numberWithInteger:respch ]];
     
 #ifdef HYDNADEBUG
-	debugPrint(@"ExtSocket", respch, @"A new stream was added");
-	debugPrint(@"ExtSocket", respch, [ NSString stringWithFormat:@"The size of openStream is now %i", [ m_openStreams count ]]);
+	debugPrint(@"ExtSocket", respch, @"A new channel was added");
+	debugPrint(@"ExtSocket", respch, [ NSString stringWithFormat:@"The size of openChannel is now %i", [ m_openChannels count ]]);
 #endif
-    [ m_openStreamsMutex unlock ];
+    [ m_openChannelsMutex unlock ];
     
-    [ stream openSuccess:respch ];
+    [ channel openSuccess:respch ];
     
     [ m_openWaitMutex lock ];
     [ m_pendingMutex lock ];
     NSMutableArray *queue = [ m_openWaitQueue objectForKey:[ NSNumber numberWithInteger:ch ]];
     if (queue != nil) {
-        // Destroy all pending request IF response wans't a redirect stream.
+        // Destroy all pending request IF response wans't a redirect channel.
         if (respch == ch) {
             [[ m_pendingOpenRequests objectForKey:[ NSNumber numberWithInteger:ch ]] release ];
             [ m_pendingOpenRequests removeObjectForKey:[ NSNumber numberWithInteger:ch ]];
@@ -715,7 +715,7 @@ static NSMutableDictionary *m_availableSockets = nil;
                 request = [ queue objectAtIndex:0 ];
                 [ queue removeObjectAtIndex:0 ];
                 
-                [[ request stream ] destroy:@"Stream already open" ];
+                [[ request channel ] destroy:@"Channel already open" ];
             }
             
             return;
@@ -740,15 +740,15 @@ static NSMutableDictionary *m_availableSockets = nil;
     [ m_openWaitMutex unlock ];
 }
 
-- (void) processDataPacketWithChannel:(NSUInteger)ch priority:(NSInteger)priority payload:(NSData*)payload
+- (void) processDataPacketWithChannelId:(NSUInteger)ch priority:(NSInteger)priority payload:(NSData*)payload
 {
-    [ m_openStreamsMutex lock ];
-    Stream *stream = [ m_openStreams objectForKey:[ NSNumber numberWithInteger:ch ]];
-    [ m_openStreamsMutex unlock ];
-    StreamData *data;
+    [ m_openChannelsMutex lock ];
+    Channel *channel = [ m_openChannels objectForKey:[ NSNumber numberWithInteger:ch ]];
+    [ m_openChannelsMutex unlock ];
+    ChannelData *data;
     
-    if (!stream) {
-        [ self destroy:@"No stream was available to take care of the data received" ];
+    if (!channel) {
+        [ self destroy:@"No channel was available to take care of the data received" ];
         return;
     }
     
@@ -757,13 +757,13 @@ static NSMutableDictionary *m_availableSockets = nil;
         return;
     }
     
-    data = [[ StreamData alloc ] initWithPriority:priority content:payload ];
-    [ stream addData:data ];
+    data = [[ ChannelData alloc ] initWithPriority:priority content:payload ];
+    [ channel addData:data ];
 }
 
-- (BOOL) processSignalPacketWithStream:(Stream*)stream flag:(NSInteger)flag payload:(NSData*)payload
+- (BOOL) processSignalPacketWithChannel:(Channel*)channel flag:(NSInteger)flag payload:(NSData*)payload
 {
-    StreamSignal *signal;
+    ChannelSignal *signal;
     
     if (flag > 0x0) {
         NSString *m = @"";
@@ -773,23 +773,23 @@ static NSMutableDictionary *m_availableSockets = nil;
         }
         
         if (flag != SIG_END) {
-            [ stream destroy:[ StreamError fromSigError:flag data:m ]];
+            [ channel destroy:[ ChannelError fromSigError:flag data:m ]];
         } else {
-            [ stream destroy:@"" ];
+            [ channel destroy:@"" ];
         }
         return NO;
     }
     
-    if (!stream) {
+    if (!channel) {
         return NO;
     }
     
-    signal = [[ StreamSignal alloc ] initWithType:flag content:payload];
-    [ stream addSignal:signal ];
+    signal = [[ ChannelSignal alloc ] initWithType:flag content:payload];
+    [ channel addSignal:signal ];
     return YES;
 }
 
-- (void) processSignalPacketWithChannel:(NSUInteger)ch flag:(NSInteger)flag payload:(NSData*)payload
+- (void) processSignalPacketWithChannelId:(NSUInteger)ch flag:(NSInteger)flag payload:(NSData*)payload
 {
     if (ch == 0) {
         BOOL destroying = NO;
@@ -802,12 +802,12 @@ static NSMutableDictionary *m_availableSockets = nil;
             [ m_closingMutex unlock ];
         }
         
-        [ m_openStreamsMutex lock ];
-        for (NSNumber *key in [ m_openStreams allKeys ]) {
-            Stream* stream = [ m_openStreams objectForKey:key ];
+        [ m_openChannelsMutex lock ];
+        for (NSNumber *key in [ m_openChannels allKeys ]) {
+            Channel* channel = [ m_openChannels objectForKey:key ];
             NSData *payloadCopy = [[ NSData alloc ] initWithData:payload ];
             
-            if (!destroying && !stream) {
+            if (!destroying && !channel) {
                 destroying = YES;
                 
                 [ m_closingMutex lock ];
@@ -815,11 +815,11 @@ static NSMutableDictionary *m_availableSockets = nil;
                 [ m_closingMutex unlock ];
             }
             
-            if (![ self processSignalPacketWithStream:stream flag:flag payload:payloadCopy ]) {
-                [ m_openStreams removeObjectForKey:key ];
+            if (![ self processSignalPacketWithChannel:channel flag:flag payload:payloadCopy ]) {
+                [ m_openChannels removeObjectForKey:key ];
             }
         }
-        [ m_openStreamsMutex unlock ];
+        [ m_openChannelsMutex unlock ];
         
         if (destroying) {
             [ m_closingMutex lock ];
@@ -829,17 +829,17 @@ static NSMutableDictionary *m_availableSockets = nil;
             [ self checkRefCount ];
         }
     } else {
-        [ m_openStreamsMutex lock ];
-        Stream *stream = [ m_openStreams objectForKey:[ NSNumber numberWithInteger:ch ]];
+        [ m_openChannelsMutex lock ];
+        Channel *channel = [ m_openChannels objectForKey:[ NSNumber numberWithInteger:ch ]];
         
-        if (!stream) {
-            [ m_openStreamsMutex unlock ];
+        if (!channel) {
+            [ m_openChannelsMutex unlock ];
             [ self destroy:@"Packet sent to unknown channel" ];
             return;
         }
 		
-		if (flag > 0x0 && ![ stream isClosing ]) {
-			[ m_openStreamsMutex unlock ];
+		if (flag > 0x0 && ![ channel isClosing ]) {
+			[ m_openChannelsMutex unlock ];
 			
 			Packet *packet = [[ Packet alloc ] initWithChannel:ch op:SIGNAL flag:SIG_END payload:payload ];
 			
@@ -854,8 +854,8 @@ static NSMutableDictionary *m_availableSockets = nil;
 			return;
 		}
         
-        [ self processSignalPacketWithStream:stream flag:flag payload:payload ];
-        [ m_openStreamsMutex unlock ];
+        [ self processSignalPacketWithChannel:channel flag:flag payload:payload ];
+        [ m_openChannelsMutex unlock ];
     }
 
 }
@@ -879,7 +879,7 @@ static NSMutableDictionary *m_availableSockets = nil;
 #ifdef HYDNADEBUG
 		debugPrint(@"ExtSocket", [ key intValue ], @"Destroying channel");
 #endif
-        [[[ m_pendingOpenRequests objectForKey:key ] stream ] destroy:error ];
+        [[[ m_pendingOpenRequests objectForKey:key ] channel ] destroy:error ];
     }
     [ m_pendingOpenRequests removeAllObjects ];
     [ m_pendingMutex unlock ];
@@ -893,26 +893,26 @@ static NSMutableDictionary *m_availableSockets = nil;
         NSMutableArray *queue = [ m_openWaitQueue objectForKey:key ];
         
         while ([ queue count ] > 0) {
-            [[[ queue objectAtIndex:0 ] stream ] destroy:error ];
+            [[[ queue objectAtIndex:0 ] channel ] destroy:error ];
             [ queue removeObjectAtIndex:0 ];
         }
     }
     [ m_openWaitQueue removeAllObjects ];
     [ m_openWaitMutex unlock ];
     
-    [ m_openStreamsMutex lock ];
+    [ m_openChannelsMutex lock ];
 #ifdef HYDNADEBUG
-	debugPrint(@"ExtSocket", 0, [ NSString stringWithFormat:@"Destroying openStreams of size %i", [ m_openStreams count ]]);
+	debugPrint(@"ExtSocket", 0, [ NSString stringWithFormat:@"Destroying openChannels of size %i", [ m_openChannels count ]]);
 #endif
     
-    for (NSNumber *key in m_openStreams) {
+    for (NSNumber *key in m_openChannels) {
 #ifdef HYDNADEBUG
 		debugPrint(@"ExtSocket", [ key intValue ], @"Destroying channel");
 #endif
-        [[ m_openStreams objectForKey:key ] destroy:error ];
+        [[ m_openChannels objectForKey:key ] destroy:error ];
     }
-    [ m_openStreams removeAllObjects ];
-    [ m_openStreamsMutex unlock ];
+    [ m_openChannels removeAllObjects ];
+    [ m_openChannelsMutex unlock ];
     
     if (m_connected) {
 #ifdef HYDNADEBUG

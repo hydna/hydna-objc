@@ -1,12 +1,12 @@
 //
-//  StreamSignal.h
+//  ChannelSignal.h
 //  hydna-objc
 //
 
 #import <Cocoa/Cocoa.h>
 
 
-@interface StreamSignal : NSObject {
+@interface ChannelSignal : NSObject {
     NSInteger m_type;
     NSData *m_content;
 }
