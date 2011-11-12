@@ -25,9 +25,8 @@ const unsigned int PAYLOAD_MAX_LIMIT = 10 * 1024;
     self->m_bytes = [[NSMutableData alloc] initWithCapacity:length];
     
     [ self writeShort:length ];
-    [ self writeByte:0 ]; // Reserved
     [ self writeUnsignedInt:ch ];
-    [ self writeByte:op << 4 | flag ];
+    [ self writeByte:((op & 3) << 3 | (flag & 7))];
     
     if (payload) {
         [ self writeBytes: payload ];
@@ -64,12 +63,12 @@ const unsigned int PAYLOAD_MAX_LIMIT = 10 * 1024;
     [ m_bytes appendBytes:result length:4 ];    
 }
 
-- (int) getSize
+- (int) size
 {
     return [ m_bytes length ];
 }
 
-- (const char*) getData
+- (const char*) data
 {
     return [ m_bytes bytes ];
 }

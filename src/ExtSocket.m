@@ -15,9 +15,6 @@
 #import <netinet/in.h>
 #import <arpa/inet.h>
 
-const int HANDSHAKE_SIZE = 9;
-const int HANDSHAKE_RESP_SIZE = 5;
-
 static NSLock *m_socketMutex;
 static NSMutableDictionary *m_availableSockets = nil;
 
@@ -34,12 +31,12 @@ static NSMutableDictionary *m_availableSockets = nil;
  *  @param host The host to connect to.
  *  @param port The port to connect to.
  */
-- (void) connectSocketWithHost:(NSString *)host port:(NSUInteger)port;
+- (void) connectSocketWithHost:(NSString *)host port:(NSUInteger)port auth:(NSString*)auth;
 
 /**
- *  Send a handshake packet.
+ *  Send HTTP upgrade request.
  */
-- (void) connectHandler;
+- (void) connectHandler:(NSString*)auth;
 
 /**
  *  Handle the Handshake response packet.
@@ -107,7 +104,7 @@ static NSMutableDictionary *m_availableSockets = nil;
 
 @implementation ExtSocket
 
-+ (id) getSocketWithHost:(NSString*)host port:(NSUInteger)port
++ (id) getSocketWithHost:(NSString*)host port:(NSUInteger)port auth:(NSString*)auth
 {
     if (!m_socketMutex) {
         m_socketMutex = [[ NSLock alloc ] init ];
@@ -118,11 +115,11 @@ static NSMutableDictionary *m_availableSockets = nil;
         m_availableSockets = [[ NSMutableDictionary alloc ] init ];
     }
     
-    NSString* key = [ host stringByAppendingFormat:@"%d", port ];
-    ExtSocket* socket = [ m_availableSockets objectForKey:key ];
+    NSString *key = [ host stringByAppendingFormat:@"%d%@", port, auth ];
+    ExtSocket *socket = [ m_availableSockets objectForKey:key ];
     
     if (!socket) {
-        socket = [[ ExtSocket alloc ] initWithHost:host port:port ];
+        socket = [[ ExtSocket alloc ] initWithHost:host port:port auth:auth ];
         [ m_availableSockets setObject:socket forKey:key ];
     }
     [ m_socketMutex unlock ];
@@ -130,7 +127,7 @@ static NSMutableDictionary *m_availableSockets = nil;
     return socket;
 }
 
-- (id) initWithHost:(NSString*)host port:(NSUInteger)port
+- (id) initWithHost:(NSString*)host port:(NSUInteger)port auth:(NSString*)auth
 {
     if (!(self = [super init])) {
         return nil;
@@ -153,6 +150,7 @@ static NSMutableDictionary *m_availableSockets = nil;
     
     self->m_host = host;
     self->m_port = port;
+	self->m_auth = auth;
     
     self->m_pendingOpenRequests = [[ NSMutableDictionary alloc ] init ];
     self->m_openChannels = [[ NSMutableDictionary alloc ] init ];
@@ -293,7 +291,7 @@ static NSMutableDictionary *m_availableSockets = nil;
         
         if (!m_connecting) {
             m_connecting = YES;
-            [ self connectSocketWithHost:m_host port:m_port ];
+            [ self connectSocketWithHost:m_host port:m_port auth:m_auth ];
         }
     } else {
 		[ m_pendingOpenRequests setObject:request forKey:[ NSNumber numberWithInteger:chcomp ]];
@@ -367,7 +365,7 @@ static NSMutableDictionary *m_availableSockets = nil;
     return found;
 }
 
-- (void) connectSocketWithHost:(NSString*)host port:(NSUInteger)port
+- (void) connectSocketWithHost:(NSString*)host port:(NSUInteger)port auth:(NSString*)auth
 {
     NSHost *nshost = [ NSHost hostWithName:host ];
     NSArray *addresses =  [ nshost addresses ];
@@ -408,10 +406,13 @@ static NSMutableDictionary *m_availableSockets = nil;
                 if (connect(m_socketFDS, (struct sockaddr *)&server, sizeof(server)) == -1) {
                     [ self destroy:[ NSString stringWithFormat:@"Could not connect to the host \"%@\"", host ]];
                 } else {
-                    [ self connectHandler ];
+                    [ self connectHandler:auth ];
                 }
             } else {
-                [ self connectHandler ];
+#ifdef HYDNADEBUG
+				debugPrint(@"ExtSocket", 0, @"Socket connected, sending HTTP upgrade request");
+#endif
+                [ self connectHandler:auth ];
             }
         }
 
@@ -421,38 +422,36 @@ static NSMutableDictionary *m_availableSockets = nil;
 
 }
 
-- (void) connectHandler
+- (void) connectHandler:(NSString*)auth
 {
-#ifdef HYDNADEBUG
-	debugPrint(@"ExtSocket", 0, @"Socket connected, sending handshake");
-#endif
-    
-    NSUInteger length = [ m_host length ];
-    NSUInteger totalLength = 4 + 1 + length;
+    const char *data;
+    NSUInteger length;
     NSInteger n = -1;
     NSUInteger offset = 0;
     
-    if (length < 256) {
-        char data[totalLength];
+	NSString *request = [ NSString stringWithFormat:@"GET /%@ HTTP/1.1\n"
+						"Connection: upgrade\n"
+						"Upgrade: winksock/1\n"
+						"Host: %@", auth, m_host ];
+	
+	// Redirects are not supported yet
+	if (true) {
+		request = [ request stringByAppendingFormat:@"\nX-Follow-Redirects: no" ];
+	}
+	
+	// End of upgrade request
+	request = [ request stringByAppendingFormat:@"\n\n" ];
+	
+	data = [ request UTF8String ];
+	length = [ request length ];
         
-        data[0] = 'D';
-        data[1] = 'N';
-        data[2] = 'A';
-        data[3] = '1';
-        data[4] = length;
-        
-        for (unsigned int i = 0; i < length; i++) {
-            data[5 + i] = [ m_host characterAtIndex:i ];
-        }
-        
-        while (offset < totalLength && n != 0) {
-            n = write(m_socketFDS, data + offset, totalLength - offset);
-            offset += n;
-        }
+    while (offset < length && n != 0) {
+        n = write(m_socketFDS, data + offset, length - offset);
+        offset += n;
     }
     
     if (n <= 0) {
-        [ self destroy:@"Could not send handshake" ];
+        [ self destroy:@"Could not send upgrade request" ];
     } else {
         [ self handshakeHandler ];
     }
@@ -460,38 +459,77 @@ static NSMutableDictionary *m_availableSockets = nil;
 
 - (void) handshakeHandler
 {
-    NSInteger responseCode = 0;
-    NSInteger offset = 0;
-    NSInteger n = -1;
-    char data[HANDSHAKE_RESP_SIZE];
-    NSString *prefix = @"DNA1";
-    
 #ifdef HYDNADEBUG
-	debugPrint(@"ExtSocket", 0, @"Incoming handshake response on socket");
+	debugPrint(@"ExtSocket", 0, @"Incoming upgrade response");
 #endif
-    
-    while (offset < HANDSHAKE_RESP_SIZE && n != 0) {
-        n = read(m_socketFDS, data + offset, HANDSHAKE_RESP_SIZE - offset);
-        offset += n;
-    }
-    
-    if (offset != HANDSHAKE_RESP_SIZE) {
-        [ self destroy:@"Server responded with bad handshake" ];
-        return;
-    }
-    
-    responseCode = data[HANDSHAKE_RESP_SIZE - 1];
-    data[HANDSHAKE_RESP_SIZE - 1] = '\0';
-    
-    if (![ prefix isEqualToString:[ NSString stringWithCString:data encoding:NSUTF8StringEncoding ]]) {
-        [ self destroy:@"Server responded with bad handshake" ];
-        return;
-    }
-    
-    if (responseCode > 0) {
-        [ self destroy:[ ChannelError fromHandshakeError:responseCode ]];
-        return;
-    }
+	
+	char lf = '\n';
+	char cr = '\r';
+	BOOL fieldsLeft = YES;
+	BOOL gotResponse = NO;
+	
+	while (fieldsLeft) {
+		NSMutableString *line = [NSMutableString stringWithCapacity:100];
+		char c = ' ';
+		
+		while (c != lf) {
+			read(m_socketFDS, &c, 1);
+			
+			if (c != lf && c != cr) {
+				[ line appendFormat:@"%c", c ];
+			} else if ([ line length ] == 0) {
+				fieldsLeft = NO;
+			}
+		}
+		
+		if (fieldsLeft) {
+			// First line is a response, all others are fields
+			if (!gotResponse) {
+				NSInteger code = 0;
+				NSRange pos;
+				
+				// Take the response code from "HTTP/1.1 101 Switching Protocols"
+				pos = [ line rangeOfString:@" " ];
+				if (pos.length != 0) {
+					NSString *line2 = [ line substringFromIndex:pos.location + 1 ];
+					pos = [ line2 rangeOfString:@" " ];
+					
+					if (pos.length != 0) {
+						code = [[ line2 substringToIndex:pos.location ] integerValue ];
+					}
+				}
+				
+				switch (code) {
+					case 101:
+						// Everything is ok, continue.
+						break;
+					case 301:
+					case 302:
+					case 307:
+						[ self destroy:@"HTTP redirect is not supported yet" ];
+						return;
+					default:
+						[ self destroy:[ NSString stringWithFormat:@"Server responded with bad HTTP response code, %i", code ] ];
+						return;
+				}
+				
+				gotResponse = YES;
+			} else {
+				NSString *lowline = [ line lowercaseString ];
+				NSRange pos;
+				
+				pos = [ lowline rangeOfString:@"upgrade: " ];
+				if (pos.length != 0) {
+					NSString *header = [ lowline substringFromIndex:pos.location + 9 ];
+					
+					if (![ header isEqualToString:@"winksock/1" ]) {
+						[ self destroy:[ NSString stringWithFormat:@"Bad protocol version: %@", header ] ];
+						return;
+					}
+				}
+			}
+		}
+	}
     
     m_handshaked = YES;
     m_connecting = NO;
@@ -590,10 +628,9 @@ static NSMutableDictionary *m_availableSockets = nil;
             break;
         }
         
-        // header[2]; Reserved
-        ch = ntohl(*(unsigned int*)&header[3]);
-        op = header[7] >> 4;
-        flag = header[7] & 0xf;
+        ch = ntohl(*(unsigned int*)&header[2]);
+        op = header[6] >> 3 & 3;
+        flag = header[6] & 7;
         
         NSData *data = [[ NSData alloc ] initWithBytesNoCopy:payload length:size - headerSize ];
         
@@ -634,6 +671,7 @@ static NSMutableDictionary *m_availableSockets = nil;
     OpenRequest *request = nil;
     Channel *channel;
     NSUInteger respch = 0;
+	NSString *message = @"";
     
     [ m_pendingMutex lock ];
     request = [ m_pendingOpenRequests objectForKey:[ NSNumber numberWithInteger:ch ]];
@@ -646,8 +684,12 @@ static NSMutableDictionary *m_availableSockets = nil;
     
     channel = [ request channel ];
     
-    if (errcode == OPEN_SUCCESS) {
+    if (errcode == OPEN_ALLOW) {
         respch = ch;
+		
+		if ([ payload length ] > 0) {
+			message = [[ NSString alloc ] initWithBytes:[ payload bytes ] length:[ payload length ] encoding:NSUTF8StringEncoding ];
+		}
     } else if (errcode == OPEN_REDIRECT) {
         if ([ payload length ] < 4) {
             [ self destroy:@"Expected redirect channel from the server" ];
@@ -662,6 +704,10 @@ static NSMutableDictionary *m_availableSockets = nil;
 		debugPrint(@"ExtSocket",     ch, [ NSString stringWithFormat:@"Redirected from %u", ch]);
 		debugPrint(@"ExtSocket", respch, [ NSString stringWithFormat:@"             to %u", respch ]);
 #endif
+		
+		if ([ payload length ] > 4) {
+			message = [[ NSString alloc ] initWithBytes:[ payload bytes ]+4 length:[ payload length ]-4 encoding:NSUTF8StringEncoding ];
+		}
     } else {
         [ m_pendingMutex lock ];
         [ request release ];
@@ -700,7 +746,7 @@ static NSMutableDictionary *m_availableSockets = nil;
 #endif
     [ m_openChannelsMutex unlock ];
     
-    [ channel openSuccess:respch ];
+    [ channel openSuccess:respch message:message ];
     
     [ m_openWaitMutex lock ];
     [ m_pendingMutex lock ];
@@ -765,7 +811,7 @@ static NSMutableDictionary *m_availableSockets = nil;
 {
     ChannelSignal *signal;
     
-    if (flag > 0x0) {
+    if (flag != SIG_EMIT) {
         NSString *m = @"";
         
         if ([ payload length ] > 0) {
@@ -794,7 +840,7 @@ static NSMutableDictionary *m_availableSockets = nil;
     if (ch == 0) {
         BOOL destroying = NO;
         
-        if (flag > 0x0 || [ payload length ] == 0) {
+        if (flag != SIG_EMIT || [ payload length ] == 0) {
             destroying = YES;
             
             [ m_closingMutex lock ];
@@ -838,7 +884,7 @@ static NSMutableDictionary *m_availableSockets = nil;
             return;
         }
 		
-		if (flag > 0x0 && ![ channel isClosing ]) {
+		if (flag != SIG_EMIT && ![ channel isClosing ]) {
 			[ m_openChannelsMutex unlock ];
 			
 			Packet *packet = [[ Packet alloc ] initWithChannel:ch op:SIGNAL flag:SIG_END payload:payload ];
@@ -926,7 +972,7 @@ static NSMutableDictionary *m_availableSockets = nil;
         m_connected = NO;
         m_handshaked = NO;
     }
-    NSString* key = [ m_host stringByAppendingFormat:@"%d", m_port ];
+    NSString *key = [ m_host stringByAppendingFormat:@"%d%@", m_port, m_auth ];
     
     [ m_socketMutex lock ];
     ExtSocket *socket = [ m_availableSockets objectForKey:key ];
@@ -950,8 +996,8 @@ static NSMutableDictionary *m_availableSockets = nil;
 {
     if (m_handshaked) {
         NSInteger n = -1;
-        NSInteger size = [ packet getSize ];
-        const char* data = [ packet getData ];
+        NSInteger size = [ packet size ];
+        const char* data = [ packet data ];
         NSInteger offset = 0;
         
         while (offset < size && n != 0) {

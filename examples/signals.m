@@ -11,12 +11,17 @@ int main(int argc, const char* argv[])
     NSAutoreleasePool *pool = [[ NSAutoreleasePool alloc ] init ];
     
     Channel *channel = [[ Channel alloc ] init ];
-    [ channel connect:@"localhost/x00112233" mode:READWRITEEMIT token:nil ];
+    [ channel connect:@"localhost:7010/x00112233" mode:READWRITEEMIT token:nil ];
     
     while (![ channel isConnected ]) {
         [ channel checkForChannelError ];
         sleep(1);
     }
+	
+	NSString *welcomeMessage = [ channel message ];
+	if (![ welcomeMessage isEqualToString:@"" ]) {
+		printf("%s\n", [ welcomeMessage UTF8String ]);
+	}
     
     [ channel emitString:@"ping" ];
     

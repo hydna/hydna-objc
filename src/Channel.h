@@ -30,6 +30,8 @@ typedef enum {
     NSString *m_host;
     NSUInteger m_port;
     NSUInteger m_ch;
+	NSString *m_auth;
+	NSString *m_message;
     
     ExtSocket *m_socket;
     
@@ -40,7 +42,7 @@ typedef enum {
     BOOL m_writable;
     BOOL m_emitable;
     
-    NSString* m_error;
+    NSString *m_error;
     
     NSUInteger m_mode;
     
@@ -101,7 +103,14 @@ typedef enum {
  *
  *  @return The channel.
  */
-- (NSUInteger) getChannel;
+- (NSUInteger) channel;
+
+/**
+ *  Returns the message received when connected.
+ *
+ *  @return The message.
+ */
+- (NSString*) message;
 
 /**
  *  Resets the error.
@@ -141,29 +150,13 @@ typedef enum {
  *  Sends data signal to the channel.
  *
  *  @param data The data to write to the channel.
- *  @param type The type of the signal.
- */
-- (void) emitBytes:(NSData*)data type:(NSUInteger)type;
-
-/**
- *  Calls emitBytes:type: with the type 0.
- *
- *  @param data The data to write to the channel.
  */
 - (void) emitBytes:(NSData*)data;
 
 /**
  *  Sends a string signal to the channel.
  *
- *  @param value The string to be sent.
- *  @param type The type of the signal.
- */
-- (void) emitString:(NSString*)string type:(NSUInteger)type;
-
-/**
- *  Calls emitString:type: with the type 0.
- *
- *  @param value The string to be sent.
+ *  @param string The string to be sent.
  */
 - (void) emitString:(NSString*)string;
 
@@ -178,7 +171,7 @@ typedef enum {
  *
  *  @param respch The response channel.
  */
-- (void) openSuccess:(NSUInteger)respch;
+- (void) openSuccess:(NSUInteger)respch message:(NSString*)message;
 
 /**
  *  Checks if some error has occured in the channel

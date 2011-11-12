@@ -18,8 +18,10 @@
     }
     
     self->m_host = @"";
-    self->m_port = 7010;
+    self->m_port = 80;
     self->m_ch = 0;
+	self->m_auth = @"";
+	self->m_message = @"";
     self->m_socket = nil;
     self->m_connected = NO;
     self->m_pendingClose = NO;
@@ -40,6 +42,7 @@
 
 - (void) dealloc
 {
+	[ m_message release ];
     [ m_dataQueue release ];
     [ m_dataMutex release ];
     [ m_signalQueue release ];
@@ -88,12 +91,20 @@
     return result;
 }
 
-- (NSUInteger) getChannel
+- (NSUInteger) channel
 {
     [ m_connectMutex lock ];
     NSUInteger result = m_ch;
     [ m_connectMutex unlock ];
     return result;
+}
+
+- (NSString*) message
+{
+    [ m_connectMutex lock ];
+    NSString *result = [ NSString stringWithString:m_message ];
+    [ m_connectMutex unlock ];
+    return result;	
 }
 
 - (void) connect:(NSString *)expr mode:(NSUInteger)mode token:(NSData *)token
@@ -123,21 +134,50 @@
     m_emitable = ((m_mode & EMIT) == EMIT);
     
     NSString *host = expr;
-    NSUInteger port = 7010;
+    NSUInteger port = 80;
     NSUInteger ch = 1;
     NSString *tokens = @"";
+	NSString *auth = @"";
     NSRange pos;
-    
+	
+	// Host can be on the form "http://auth@localhost:80/x00112233?token"
+	
+	// Take out the protocol
+    pos = [ host rangeOfString:@"://" ];
+    if (pos.length != 0) {
+		NSString *protocol = [ host substringWithRange: NSMakeRange(0, pos.location)];
+		protocol = [ protocol lowercaseString ];
+        host = [ host substringFromIndex:pos.location + 3];
+		
+		if (![ protocol isEqualToString:@"http" ]) {
+			if ([protocol isEqualToString:@"https" ]) {
+				[NSException raise:@"Error" format:@"The protocol HTTPS is not supported"];
+			} else {
+				[NSException raise:@"Error" format:@"Unknown protocol, \"%@\"", protocol];
+			}
+
+		}
+    }
+	
+	// Take out the auth
+    pos = [ host rangeOfString:@"@" ];
+    if (pos.length != 0) {
+        auth = [ host substringToIndex:pos.location ];
+        host = [ host substringFromIndex:pos.location + 1 ];
+    }
+	
+	// Take out the token
     pos = [ host rangeOfString:@"?" ];
     if (pos.length != 0) {
         tokens = [ host substringFromIndex:pos.location + 1];
         host = [ host substringToIndex:pos.location ];
     }
     
+	// Take out the channel
     pos = [ host rangeOfString:@"/x" ];
     if (pos.length != 0) {
         unsigned int addri;
-        NSString* addrs = [ host substringFromIndex:pos.location + 2];
+        NSString *addrs = [ host substringFromIndex:pos.location + 2];
         host = [ host substringToIndex:pos.location ];
         
         BOOL result = [[NSScanner scannerWithString:addrs] scanHexInt:&addri];
@@ -156,6 +196,7 @@
         }
     }
     
+	// Take out the port
     pos = [ host rangeOfString:@":" ];
     if (pos.length != 0) {
         port = [[ host substringFromIndex:pos.location + 1] integerValue];
@@ -165,8 +206,9 @@
     m_host = host;
     m_port = port;
     m_ch = ch;
+	m_auth = auth;
     
-    m_socket = [ExtSocket getSocketWithHost:m_host port:m_port];
+    m_socket = [ExtSocket getSocketWithHost:m_host port:m_port auth:m_auth];
     
     [ m_socket allocChannel ];
     
@@ -234,7 +276,7 @@
     [ self writeBytes:[string dataUsingEncoding:NSUTF8StringEncoding] ];
 }
 
-- (void) emitBytes:(NSData *)data type:(NSUInteger)type
+- (void) emitBytes:(NSData *)data
 {
     BOOL result;
     
@@ -250,7 +292,7 @@
         [NSException raise:@"Error" format:@"You do not have permission to send signals" ];
     }
     
-    Packet* packet = [[ Packet alloc ] initWithChannel:m_ch op:SIGNAL flag:type payload:data ];
+    Packet* packet = [[ Packet alloc ] initWithChannel:m_ch op:SIGNAL flag:SIG_EMIT payload:data ];
     
     [ m_connectMutex lock ];
     ExtSocket *socket = m_socket;
@@ -260,16 +302,6 @@
     if (!result) {
         [ self checkForChannelError ];
     }
-}
-
-- (void) emitBytes:(NSData *)data
-{
-    [ self emitBytes:data type:0 ];
-}
-
-- (void) emitString:(NSString *)string type:(NSUInteger)type
-{
-    [ self emitBytes:[string dataUsingEncoding:NSUTF8StringEncoding] type:type ];
 }
 
 - (void) emitString:(NSString *)string
@@ -335,7 +367,7 @@
     }
 }
 
-- (void) openSuccess:(NSUInteger)respch
+- (void) openSuccess:(NSUInteger)respch message:(NSString*)message
 {
     [ m_connectMutex lock ];
 	NSUInteger origch = m_ch;
@@ -344,6 +376,7 @@
 	m_openRequest = nil;
     m_ch = respch;
     m_connected = YES;
+	m_message = message;
     
     if (m_pendingClose) {
 		packet = m_pendingClose;

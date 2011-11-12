@@ -8,9 +8,6 @@
 #import "OpenRequest.h"
 #import "Packet.h"
 
-extern const int HANDSHAKE_SIZE;
-extern const int HANDSHAKE_RESP_SIZE;
-
 /**
  *  This class is used internally by the Channel class.
  *  A user of the library should not create an instance of this class.
@@ -33,6 +30,7 @@ extern const int HANDSHAKE_RESP_SIZE;
     
     NSString *m_host;
     NSUInteger m_port;
+	NSString *m_auth;
     NSInteger m_socketFDS;
     
     NSMutableDictionary *m_pendingOpenRequests;
@@ -48,7 +46,7 @@ extern const int HANDSHAKE_RESP_SIZE;
  *  @param host The host associated with the socket.
  *  @param port The port associated with the socket.
  */
-+ (id) getSocketWithHost:(NSString*)host port:(NSUInteger)port;
++ (id) getSocketWithHost:(NSString*)host port:(NSUInteger)port auth:(NSString*)auth;
 
 /**
  *  Initializes a new Channel instance.
@@ -56,7 +54,7 @@ extern const int HANDSHAKE_RESP_SIZE;
  *  @param host The host the socket should connect to.
  *  @param port The port the socket should connect to.
  */
-- (id) initWithHost:(NSString*)host port:(NSUInteger)port;
+- (id) initWithHost:(NSString*)host port:(NSUInteger)port auth:(NSString*)auth;
 
 - (void) dealloc;
 
