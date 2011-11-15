@@ -1,9 +1,9 @@
 //
-//  ExtSocket.m
+//  Connection.m
 //  hydna-objc
 //
 
-#import "ExtSocket.h"
+#import "Connection.h"
 #import "Channel.h"
 #import "ChannelError.h"
 
@@ -15,23 +15,23 @@
 #import <netinet/in.h>
 #import <arpa/inet.h>
 
-static NSLock *m_socketMutex;
-static NSMutableDictionary *m_availableSockets = nil;
+static NSLock *m_connectionMutex;
+static NSMutableDictionary *m_availableConnections = nil;
 
-@interface ExtSocket ()
+@interface Connection ()
 
 /**
- *  Check if there are any more references to the socket.
+ *  Check if there are any more references to the connection.
  */
 - (void) checkRefCount;
 
 /**
- *  Connect the socket.
+ *  Connect the connection.
  *
  *  @param host The host to connect to.
  *  @param port The port to connect to.
  */
-- (void) connectSocketWithHost:(NSString *)host port:(NSUInteger)port auth:(NSString*)auth;
+- (void) connectConnectionWithHost:(NSString *)host port:(NSUInteger)port auth:(NSString*)auth;
 
 /**
  *  Send HTTP upgrade request.
@@ -86,7 +86,7 @@ static NSMutableDictionary *m_availableSockets = nil;
 - (void) processSignalPacketWithChannelId:(NSUInteger)ch flag:(NSInteger)flag payload:(NSData *)payload;
 
 /**
- *  Destroy the socket.
+ *  Destroy the connection.
  *
  *  @error The cause of the destroy.
  */
@@ -102,29 +102,29 @@ static NSMutableDictionary *m_availableSockets = nil;
 
 @end
 
-@implementation ExtSocket
+@implementation Connection
 
-+ (id) getSocketWithHost:(NSString*)host port:(NSUInteger)port auth:(NSString*)auth
++ (id) getConnectionWithHost:(NSString*)host port:(NSUInteger)port auth:(NSString*)auth
 {
-    if (!m_socketMutex) {
-        m_socketMutex = [[ NSLock alloc ] init ];
+    if (!m_connectionMutex) {
+        m_connectionMutex = [[ NSLock alloc ] init ];
     }
     
-    [ m_socketMutex lock ];
-    if (!m_availableSockets) {
-        m_availableSockets = [[ NSMutableDictionary alloc ] init ];
+    [ m_connectionMutex lock ];
+    if (!m_availableConnections) {
+        m_availableConnections = [[ NSMutableDictionary alloc ] init ];
     }
     
     NSString *key = [ host stringByAppendingFormat:@"%d%@", port, auth ];
-    ExtSocket *socket = [ m_availableSockets objectForKey:key ];
+    Connection *connection = [ m_availableConnections objectForKey:key ];
     
-    if (!socket) {
-        socket = [[ ExtSocket alloc ] initWithHost:host port:port auth:auth ];
-        [ m_availableSockets setObject:socket forKey:key ];
+    if (!connection) {
+        connection = [[ Connection alloc ] initWithHost:host port:port auth:auth ];
+        [ m_availableConnections setObject:connection forKey:key ];
     }
-    [ m_socketMutex unlock ];
+    [ m_connectionMutex unlock ];
     
-    return socket;
+    return connection;
 }
 
 - (id) initWithHost:(NSString*)host port:(NSUInteger)port auth:(NSString*)auth
@@ -189,14 +189,14 @@ static NSMutableDictionary *m_availableSockets = nil;
     ++m_channelRefCount;
     [ m_channelRefMutex unlock ];
 #ifdef HYDNADEBUG
-	debugPrint(@"ExtSocket", 0, [NSString stringWithFormat:@"Allocating a new channel, channel ref count is %i", m_channelRefCount]);
+	debugPrint(@"Connection", 0, [NSString stringWithFormat:@"Allocating a new channel, channel ref count is %i", m_channelRefCount]);
 #endif
 }
 
 - (void) deallocChannel:(NSUInteger)ch;
 {
 #ifdef HYDNADEBUG
-	debugPrint(@"ExtSocket", ch, @"Deallocatin a channel");
+	debugPrint(@"Connection", ch, @"Deallocatin a channel");
 #endif
     [ m_destroyingMutex lock ];
     [ m_closingMutex lock ];
@@ -207,7 +207,7 @@ static NSMutableDictionary *m_availableSockets = nil;
         [ m_openChannelsMutex lock ];
         [ m_openChannels removeObjectForKey:[ NSNumber numberWithInteger:ch ] ];
 #ifdef HYDNADEBUG
-		debugPrint(@"ExtSocket", ch, [NSString stringWithFormat:@"Size of openChannels is now %i", [ m_openChannels count ]]);
+		debugPrint(@"Connection", ch, [NSString stringWithFormat:@"Size of openChannels is now %i", [ m_openChannels count ]]);
 #endif
         [ m_openChannelsMutex unlock ];
     } else {
@@ -228,7 +228,7 @@ static NSMutableDictionary *m_availableSockets = nil;
     if (m_channelRefCount == 0) {
         [ m_channelRefMutex unlock ];
 #ifdef HYDNADEBUG
-		debugPrint(@"ExtSocket", 0, @"No more refs, destroy socket");
+		debugPrint(@"Connection", 0, @"No more refs, destroy connection");
 #endif
         [ m_destroyingMutex lock ];
         [ m_closingMutex lock ];
@@ -251,14 +251,14 @@ static NSMutableDictionary *m_availableSockets = nil;
     NSMutableArray *queue;
     
 #ifdef HYDNADEBUG
-	debugPrint(@"ExtSocket", chcomp, @"A channel is trying to send a new open request");
+	debugPrint(@"Connection", chcomp, @"A channel is trying to send a new open request");
 #endif
     
     [ m_openChannelsMutex lock ];
     if ([ m_openChannels objectForKey:[ NSNumber numberWithInteger:chcomp ]] != nil) {
         [ m_openChannelsMutex unlock ];
 #ifdef HYDNADEBUG
-		debugPrint(@"ExtSocket", chcomp, @"The channel was already open, cancel the open request");
+		debugPrint(@"Connection", chcomp, @"The channel was already open, cancel the open request");
 #endif
         [ request release ];
         return NO;
@@ -270,7 +270,7 @@ static NSMutableDictionary *m_availableSockets = nil;
         [ m_pendingMutex unlock ];
         
 #ifdef HYDNADEBUG
-		debugPrint(@"ExtSocket", chcomp, @"A open request is waiting to be sent, queue up the new open request");
+		debugPrint(@"Connection", chcomp, @"A open request is waiting to be sent, queue up the new open request");
 #endif
         [ m_openWaitMutex lock ];
         queue = [ m_openWaitQueue objectForKey:[ NSNumber numberWithInteger:chcomp ]];
@@ -284,21 +284,21 @@ static NSMutableDictionary *m_availableSockets = nil;
         [ m_openWaitMutex unlock ];
     } else if (!m_handshaked) {
 #ifdef HYDNADEBUG
-		debugPrint(@"ExtSocket", chcomp, @"The socket was not connected, queue up the new open request");
+		debugPrint(@"Connection", chcomp, @"No connection, queue up the new open request");
 #endif
         [ m_pendingOpenRequests setObject:request forKey:[ NSNumber numberWithInteger:chcomp ]];
         [ m_pendingMutex unlock ];
         
         if (!m_connecting) {
             m_connecting = YES;
-            [ self connectSocketWithHost:m_host port:m_port auth:m_auth ];
+            [ self connectConnectionWithHost:m_host port:m_port auth:m_auth ];
         }
     } else {
 		[ m_pendingOpenRequests setObject:request forKey:[ NSNumber numberWithInteger:chcomp ]];
         [ m_pendingMutex unlock ];
         
 #ifdef HYDNADEBUG
-		debugPrint(@"ExtSocket", chcomp, @"The socket was already connected, sending the new open request");
+		debugPrint(@"Connection", chcomp, @"Already connected, sending the new open request");
 #endif
         [ self writeBytes:[ request packet ]];
         [ request setSent:YES ];
@@ -365,14 +365,14 @@ static NSMutableDictionary *m_availableSockets = nil;
     return found;
 }
 
-- (void) connectSocketWithHost:(NSString*)host port:(NSUInteger)port auth:(NSString*)auth
+- (void) connectConnectionWithHost:(NSString*)host port:(NSUInteger)port auth:(NSString*)auth
 {
     NSHost *nshost = [ NSHost hostWithName:host ];
     NSArray *addresses =  [ nshost addresses ];
     NSString *address = @"";
     
 #ifdef HYDNADEBUG
-	debugPrint(@"ExtSocket", 0, @"Connecting socket");
+	debugPrint(@"Connection", 0, @"Connecting...");
 #endif
     
     for (NSString *a in addresses) {
@@ -385,13 +385,13 @@ static NSMutableDictionary *m_availableSockets = nil;
     if (address != @"") {
         struct sockaddr_in server;
         
-        if ((m_socketFDS = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) == -1) {
-            [ self destroy:@"Socket could not be created" ];
+        if ((m_connectionFDS = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) == -1) {
+            [ self destroy:@"Connection could not be created" ];
         } else {
             m_connected = YES;
             int flag = 1;
             
-            if (setsockopt(m_socketFDS, IPPROTO_TCP,
+            if (setsockopt(m_connectionFDS, IPPROTO_TCP,
                            TCP_NODELAY, (char *) &flag,
                            sizeof(flag)) < 0) {
                 NSLog(@"WARNING: Could not set TCP_NODELAY");
@@ -402,15 +402,15 @@ static NSMutableDictionary *m_availableSockets = nil;
             server.sin_family = AF_INET;
             server.sin_port = htons(port);
             
-            if (connect(m_socketFDS, (struct sockaddr *)&server, sizeof(server)) == -1) {
-                if (connect(m_socketFDS, (struct sockaddr *)&server, sizeof(server)) == -1) {
+            if (connect(m_connectionFDS, (struct sockaddr *)&server, sizeof(server)) == -1) {
+                if (connect(m_connectionFDS, (struct sockaddr *)&server, sizeof(server)) == -1) {
                     [ self destroy:[ NSString stringWithFormat:@"Could not connect to the host \"%@\"", host ]];
                 } else {
                     [ self connectHandler:auth ];
                 }
             } else {
 #ifdef HYDNADEBUG
-				debugPrint(@"ExtSocket", 0, @"Socket connected, sending HTTP upgrade request");
+				debugPrint(@"Connection", 0, @"Connection connected, sending HTTP upgrade request");
 #endif
                 [ self connectHandler:auth ];
             }
@@ -446,7 +446,7 @@ static NSMutableDictionary *m_availableSockets = nil;
 	length = [ request length ];
         
     while (offset < length && n != 0) {
-        n = write(m_socketFDS, data + offset, length - offset);
+        n = write(m_connectionFDS, data + offset, length - offset);
         offset += n;
     }
     
@@ -460,7 +460,7 @@ static NSMutableDictionary *m_availableSockets = nil;
 - (void) handshakeHandler
 {
 #ifdef HYDNADEBUG
-	debugPrint(@"ExtSocket", 0, @"Incoming upgrade response");
+	debugPrint(@"Connection", 0, @"Incoming upgrade response");
 #endif
 	
 	char lf = '\n';
@@ -473,7 +473,7 @@ static NSMutableDictionary *m_availableSockets = nil;
 		char c = ' ';
 		
 		while (c != lf) {
-			read(m_socketFDS, &c, 1);
+			read(m_connectionFDS, &c, 1);
 			
 			if (c != lf && c != cr) {
 				[ line appendFormat:@"%c", c ];
@@ -535,7 +535,7 @@ static NSMutableDictionary *m_availableSockets = nil;
     m_connecting = NO;
     
 #ifdef HYDNADEBUG
-	debugPrint(@"ExtSocket", 0, @"Handshake done on socket");
+	debugPrint(@"Connection", 0, @"Handshake done on connection");
 #endif
     
     for (NSString *key in m_pendingOpenRequests) {
@@ -545,7 +545,7 @@ static NSMutableDictionary *m_availableSockets = nil;
         if (m_connected) {
             [ request setSent:YES ];
 #ifdef HYDNADEBUG
-			debugPrint(@"ExtSocket", [ request ch ], @"Open request sent");
+			debugPrint(@"Connection", [ request ch ], @"Open request sent");
 #endif
         } else {
             return;
@@ -554,7 +554,7 @@ static NSMutableDictionary *m_availableSockets = nil;
     }
     
 #ifdef HYDNADEBUG
-	debugPrint(@"ExtSocket", 0, @"Creating a new thread for packet listening");
+	debugPrint(@"Connection", 0, @"Creating a new thread for packet listening");
 #endif
     
     [NSThread detachNewThreadSelector:@selector(listen:) toTarget:self withObject:nil];
@@ -594,7 +594,7 @@ static NSMutableDictionary *m_availableSockets = nil;
     
     for (;;) {
         while (offset < headerSize && n > 0) {
-            n = read(m_socketFDS, header + offset, headerSize - offset);
+            n = read(m_connectionFDS, header + offset, headerSize - offset);
             offset += n;
         }
         
@@ -602,7 +602,7 @@ static NSMutableDictionary *m_availableSockets = nil;
             [ m_listeningMutex lock ];
             if (m_listening) {
                 [ m_listeningMutex unlock ];
-                [ self destroy:@"Could not read from the socket" ];
+                [ self destroy:@"Could not read from the connection" ];
             } else {
 				[ m_listeningMutex unlock ];
 			}
@@ -613,7 +613,7 @@ static NSMutableDictionary *m_availableSockets = nil;
         payload = malloc((size - headerSize) * sizeof(char));
 		
         while (offset < size && n > 0) {
-            n = read(m_socketFDS, payload + offset - headerSize, size - offset);
+            n = read(m_connectionFDS, payload + offset - headerSize, size - offset);
             offset += n;
         }
         
@@ -621,7 +621,7 @@ static NSMutableDictionary *m_availableSockets = nil;
             [ m_listeningMutex lock ];
             if (m_listening) {
                 [ m_listeningMutex unlock ];
-                [ self destroy:@"Could not read from the socket" ];
+                [ self destroy:@"Could not read from the connection" ];
             } else {
 				[ m_listeningMutex unlock ];
 			}
@@ -637,21 +637,21 @@ static NSMutableDictionary *m_availableSockets = nil;
         switch (op) {
             case OPEN:
 #ifdef HYDNADEBUG
-				debugPrint(@"ExtSocket", ch, @"Received open response");
+				debugPrint(@"Connection", ch, @"Received open response");
 #endif
                 [ self processOpenPacketWithChannelId:ch errcode:flag payload:data ];
                 break;
                 
             case DATA:
 #ifdef HYDNADEBUG
-				debugPrint(@"ExtSocket", ch, @"Received data");
+				debugPrint(@"Connection", ch, @"Received data");
 #endif
                 [ self processDataPacketWithChannelId:ch priority:flag payload:data ];
                 break;
                 
             case SIGNAL:
 #ifdef HYDNADEBUG
-				debugPrint(@"ExtSocket", ch, @"Received signal");
+				debugPrint(@"Connection", ch, @"Received signal");
 #endif
                 [ self processSignalPacketWithChannelId:ch flag:flag payload:data ];
                 break;
@@ -661,7 +661,7 @@ static NSMutableDictionary *m_availableSockets = nil;
         n = 1;
     }
 #ifdef HYDNADEBUG
-	debugPrint(@"ExtSocket", 0, @"Listening thread exited");
+	debugPrint(@"Connection", 0, @"Listening thread exited");
 #endif
     [ pool release ];
 }
@@ -701,8 +701,8 @@ static NSMutableDictionary *m_availableSockets = nil;
         respch = ntohl(*(unsigned int*)&data[0]);
         
 #ifdef HYDNADEBUG
-		debugPrint(@"ExtSocket",     ch, [ NSString stringWithFormat:@"Redirected from %u", ch]);
-		debugPrint(@"ExtSocket", respch, [ NSString stringWithFormat:@"             to %u", respch ]);
+		debugPrint(@"Connection",     ch, [ NSString stringWithFormat:@"Redirected from %u", ch]);
+		debugPrint(@"Connection", respch, [ NSString stringWithFormat:@"             to %u", respch ]);
 #endif
 		
 		if ([ payload length ] > 4) {
@@ -725,7 +725,7 @@ static NSMutableDictionary *m_availableSockets = nil;
         }
 
 #ifdef HYDNADEBUG
-		debugPrint(@"ExtSocket", ch, [ NSString stringWithFormat:@"The server rejected the open request, errorcode %i", errcode ]);
+		debugPrint(@"Connection", ch, [ NSString stringWithFormat:@"The server rejected the open request, errorcode %i", errcode ]);
 #endif
         [ channel destroy:[ ChannelError fromOpenError:errcode data:m ]];
         return;
@@ -741,8 +741,8 @@ static NSMutableDictionary *m_availableSockets = nil;
     [ m_openChannels setObject:channel forKey:[ NSNumber numberWithInteger:respch ]];
     
 #ifdef HYDNADEBUG
-	debugPrint(@"ExtSocket", respch, @"A new channel was added");
-	debugPrint(@"ExtSocket", respch, [ NSString stringWithFormat:@"The size of openChannel is now %i", [ m_openChannels count ]]);
+	debugPrint(@"Connection", respch, @"A new channel was added");
+	debugPrint(@"Connection", respch, [ NSString stringWithFormat:@"The size of openChannel is now %i", [ m_openChannels count ]]);
 #endif
     [ m_openChannelsMutex unlock ];
     
@@ -913,17 +913,17 @@ static NSMutableDictionary *m_availableSockets = nil;
     [ m_destroyingMutex unlock ];
     
 #ifdef HYDNADEBUG
-	debugPrint(@"ExtSocket", 0, [ NSString stringWithFormat:@"Destroying socket because: %@", error ]);
+	debugPrint(@"Connection", 0, [ NSString stringWithFormat:@"Destroying connection because: %@", error ]);
 #endif
     
     [ m_pendingMutex lock ];
 #ifdef HYDNADEBUG
-	debugPrint(@"ExtSocket", 0, [ NSString stringWithFormat:@"Destroying pendingOpenRequests of size %i", [ m_pendingOpenRequests count ]]);
+	debugPrint(@"Connection", 0, [ NSString stringWithFormat:@"Destroying pendingOpenRequests of size %i", [ m_pendingOpenRequests count ]]);
 #endif
     
     for (NSNumber *key in m_pendingOpenRequests) {
 #ifdef HYDNADEBUG
-		debugPrint(@"ExtSocket", [ key intValue ], @"Destroying channel");
+		debugPrint(@"Connection", [ key intValue ], @"Destroying channel");
 #endif
         [[[ m_pendingOpenRequests objectForKey:key ] channel ] destroy:error ];
     }
@@ -932,7 +932,7 @@ static NSMutableDictionary *m_availableSockets = nil;
     
     [ m_openWaitMutex lock ];
 #ifdef HYDNADEBUG
-	debugPrint(@"ExtSocket", 0, [ NSString stringWithFormat:@"Destroying waitQueue of size %i", [ m_openWaitQueue count ]]);
+	debugPrint(@"Connection", 0, [ NSString stringWithFormat:@"Destroying waitQueue of size %i", [ m_openWaitQueue count ]]);
 #endif
     
     for (NSNumber *key in m_openWaitQueue) {
@@ -948,12 +948,12 @@ static NSMutableDictionary *m_availableSockets = nil;
     
     [ m_openChannelsMutex lock ];
 #ifdef HYDNADEBUG
-	debugPrint(@"ExtSocket", 0, [ NSString stringWithFormat:@"Destroying openChannels of size %i", [ m_openChannels count ]]);
+	debugPrint(@"Connection", 0, [ NSString stringWithFormat:@"Destroying openChannels of size %i", [ m_openChannels count ]]);
 #endif
     
     for (NSNumber *key in m_openChannels) {
 #ifdef HYDNADEBUG
-		debugPrint(@"ExtSocket", [ key intValue ], @"Destroying channel");
+		debugPrint(@"Connection", [ key intValue ], @"Destroying channel");
 #endif
         [[ m_openChannels objectForKey:key ] destroy:error ];
     }
@@ -962,29 +962,29 @@ static NSMutableDictionary *m_availableSockets = nil;
     
     if (m_connected) {
 #ifdef HYDNADEBUG
-		debugPrint(@"ExtSocket", 0, @"Closing socket");
+		debugPrint(@"Connection", 0, @"Closing connection");
 #endif
         [ m_listeningMutex lock ];
         m_listening = NO;
         [ m_listeningMutex unlock ];
         
-        close(m_socketFDS);
+        close(m_connectionFDS);
         m_connected = NO;
         m_handshaked = NO;
     }
     NSString *key = [ m_host stringByAppendingFormat:@"%d%@", m_port, m_auth ];
     
-    [ m_socketMutex lock ];
-    ExtSocket *socket = [ m_availableSockets objectForKey:key ];
+    [ m_connectionMutex lock ];
+    Connection *connection = [ m_availableConnections objectForKey:key ];
     
-    if (socket) {
-        [ socket release ];
-        [ m_availableSockets removeObjectForKey:m_host ];
+    if (connection) {
+        [ connection release ];
+        [ m_availableConnections removeObjectForKey:m_host ];
     }
-    [ m_socketMutex unlock ];
+    [ m_connectionMutex unlock ];
     
 #ifdef HYDNADEBUG
-	debugPrint(@"ExtSocket", 0, @"Destroying socket done");
+	debugPrint(@"Connection", 0, @"Destroying connection done");
 #endif
     
     [ m_destroyingMutex lock ];
@@ -1001,12 +1001,12 @@ static NSMutableDictionary *m_availableSockets = nil;
         NSInteger offset = 0;
         
         while (offset < size && n != 0) {
-            n = write(m_socketFDS, data + offset, size - offset);
+            n = write(m_connectionFDS, data + offset, size - offset);
             offset += n;
         }
         
         if (n <= 0) {
-            [ self destroy:@"Could not write to the socket" ];
+            [ self destroy:@"Could not write to the connection" ];
             return NO;
         }
         return  YES;

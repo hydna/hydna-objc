@@ -5,7 +5,7 @@
 
 #import <Cocoa/Cocoa.h>
 
-#import "ExtSocket.h"
+#import "Connection.h"
 #import "OpenRequest.h"
 #import "ChannelData.h"
 #import "ChannelSignal.h"
@@ -33,7 +33,7 @@ typedef enum {
 	NSString *m_auth;
 	NSString *m_message;
     
-    ExtSocket *m_socket;
+    Connection *m_connection;
     
     BOOL m_connected;
 	BOOL m_closing;
@@ -167,7 +167,7 @@ typedef enum {
 
 /**
  *  Internal callback for open success.
- *  Used by the ExtSocket class.
+ *  Used by the Connection class.
  *
  *  @param respch The response channel.
  */
@@ -180,7 +180,7 @@ typedef enum {
 - (void) checkForChannelError;
 
 /**
- *  Internally destroy socket.
+ *  Internally destroy channel.
  *
  *  @param error The cause of the destroy.
  */

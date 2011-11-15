@@ -1,5 +1,5 @@
 //
-//  ExtSocket.h
+//  Connection.h
 //  hydna-objc
 //
 
@@ -12,7 +12,7 @@
  *  This class is used internally by the Channel class.
  *  A user of the library should not create an instance of this class.
  */
-@interface ExtSocket : NSObject {
+@interface Connection : NSObject {
     NSLock *m_channelRefMutex;
     NSLock *m_destroyingMutex;
     NSLock *m_closingMutex;
@@ -31,7 +31,7 @@
     NSString *m_host;
     NSUInteger m_port;
 	NSString *m_auth;
-    NSInteger m_socketFDS;
+    NSInteger m_connectionFDS;
     
     NSMutableDictionary *m_pendingOpenRequests;
     NSMutableDictionary *m_openChannels;
@@ -41,33 +41,33 @@
 }
 
 /**
- *  Return an available socket or create a new one.
+ *  Return an available connection or create a new one.
  *
- *  @param host The host associated with the socket.
- *  @param port The port associated with the socket.
+ *  @param host The host associated with the connection.
+ *  @param port The port associated with the connection.
  */
-+ (id) getSocketWithHost:(NSString*)host port:(NSUInteger)port auth:(NSString*)auth;
++ (id) getConnectionWithHost:(NSString*)host port:(NSUInteger)port auth:(NSString*)auth;
 
 /**
  *  Initializes a new Channel instance.
  *
- *  @param host The host the socket should connect to.
- *  @param port The port the socket should connect to.
+ *  @param host The host the connection should connect to.
+ *  @param port The port the connection should connect to.
  */
 - (id) initWithHost:(NSString*)host port:(NSUInteger)port auth:(NSString*)auth;
 
 - (void) dealloc;
 
 /**
- *  Returns the handshake status of the socket.
+ *  Returns the handshake status of the connection.
  *
- *  @return YES if the socket has handshaked.
+ *  @return YES if the connection has handshaked.
  */
 - (BOOL) hasHandshaked;
 
 /**
  * Method to keep track of the number of channels that is associated 
- * with this socket instance.
+ * with this connection instance.
  */
 - (void) allocChannel;
 
@@ -95,7 +95,7 @@
 - (BOOL) cancelOpen:(OpenRequest*)request;
 
 /**
- *  Writes a packet to the socket.
+ *  Writes a packet to the connection.
  *
  *  @param packet The packet to be sent.
  *  @return YES if the packet was sent.

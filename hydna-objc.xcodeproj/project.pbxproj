@@ -25,8 +25,8 @@
 		293208591304800E00D9DE1E /* OpenRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 293208571304800E00D9DE1E /* OpenRequest.m */; };
 		293208641304820800D9DE1E /* Channel.h in Headers */ = {isa = PBXBuildFile; fileRef = 293208621304820800D9DE1E /* Channel.h */; };
 		293208651304820800D9DE1E /* Channel.m in Sources */ = {isa = PBXBuildFile; fileRef = 293208631304820800D9DE1E /* Channel.m */; };
-		293208681304821F00D9DE1E /* ExtSocket.h in Headers */ = {isa = PBXBuildFile; fileRef = 293208661304821F00D9DE1E /* ExtSocket.h */; };
-		293208691304821F00D9DE1E /* ExtSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = 293208671304821F00D9DE1E /* ExtSocket.m */; };
+		293208681304821F00D9DE1E /* Connection.h in Headers */ = {isa = PBXBuildFile; fileRef = 293208661304821F00D9DE1E /* Connection.h */; };
+		293208691304821F00D9DE1E /* Connection.m in Sources */ = {isa = PBXBuildFile; fileRef = 293208671304821F00D9DE1E /* Connection.m */; };
 		2932086C1304822E00D9DE1E /* Packet.h in Headers */ = {isa = PBXBuildFile; fileRef = 2932086A1304822E00D9DE1E /* Packet.h */; };
 		2932086D1304822E00D9DE1E /* Packet.m in Sources */ = {isa = PBXBuildFile; fileRef = 2932086B1304822E00D9DE1E /* Packet.m */; };
 		88F3BF0A137EA88E00BE169C /* hydna-objc.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8DC2EF5B0486A6940098B216 /* hydna-objc.framework */; };
@@ -98,8 +98,8 @@
 		293208571304800E00D9DE1E /* OpenRequest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = OpenRequest.m; path = src/OpenRequest.m; sourceTree = "<group>"; };
 		293208621304820800D9DE1E /* Channel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Channel.h; path = src/Channel.h; sourceTree = "<group>"; };
 		293208631304820800D9DE1E /* Channel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = Channel.m; path = src/Channel.m; sourceTree = "<group>"; };
-		293208661304821F00D9DE1E /* ExtSocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ExtSocket.h; path = src/ExtSocket.h; sourceTree = "<group>"; };
-		293208671304821F00D9DE1E /* ExtSocket.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = ExtSocket.m; path = src/ExtSocket.m; sourceTree = "<group>"; };
+		293208661304821F00D9DE1E /* Connection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Connection.h; path = src/Connection.h; sourceTree = "<group>"; };
+		293208671304821F00D9DE1E /* Connection.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = Connection.m; path = src/Connection.m; sourceTree = "<group>"; };
 		2932086A1304822E00D9DE1E /* Packet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Packet.h; path = src/Packet.h; sourceTree = "<group>"; };
 		2932086B1304822E00D9DE1E /* Packet.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = Packet.m; path = src/Packet.m; sourceTree = "<group>"; };
 		32DBCF5E0370ADEE00C91783 /* hydna-objc_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "hydna-objc_Prefix.pch"; sourceTree = "<group>"; };
@@ -211,8 +211,8 @@
 		08FB77AEFE84172EC02AAC07 /* Classes */ = {
 			isa = PBXGroup;
 			children = (
-				293208661304821F00D9DE1E /* ExtSocket.h */,
-				293208671304821F00D9DE1E /* ExtSocket.m */,
+				293208661304821F00D9DE1E /* Connection.h */,
+				293208671304821F00D9DE1E /* Connection.m */,
 				293208561304800E00D9DE1E /* OpenRequest.h */,
 				293208571304800E00D9DE1E /* OpenRequest.m */,
 				2932086A1304822E00D9DE1E /* Packet.h */,
@@ -280,7 +280,7 @@
 				2932084313047D3B00D9DE1E /* ChannelSignal.h in Headers */,
 				293208581304800E00D9DE1E /* OpenRequest.h in Headers */,
 				293208641304820800D9DE1E /* Channel.h in Headers */,
-				293208681304821F00D9DE1E /* ExtSocket.h in Headers */,
+				293208681304821F00D9DE1E /* Connection.h in Headers */,
 				2932086C1304822E00D9DE1E /* Packet.h in Headers */,
 				2931A1141315A6DA003CEE46 /* ChannelError.h in Headers */,
 				88F3BF54137EB3C900BE169C /* DebugHelper.h in Headers */,
@@ -484,7 +484,7 @@
 				2932084413047D3B00D9DE1E /* ChannelSignal.m in Sources */,
 				293208591304800E00D9DE1E /* OpenRequest.m in Sources */,
 				293208651304820800D9DE1E /* Channel.m in Sources */,
-				293208691304821F00D9DE1E /* ExtSocket.m in Sources */,
+				293208691304821F00D9DE1E /* Connection.m in Sources */,
 				2932086D1304822E00D9DE1E /* Packet.m in Sources */,
 				2931A1151315A6DA003CEE46 /* ChannelError.m in Sources */,
 				88F3BF55137EB3C900BE169C /* DebugHelper.m in Sources */,

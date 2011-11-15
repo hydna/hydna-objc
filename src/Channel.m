@@ -22,7 +22,7 @@
     self->m_ch = 0;
 	self->m_auth = @"";
 	self->m_message = @"";
-    self->m_socket = nil;
+    self->m_connection = nil;
     self->m_connected = NO;
     self->m_pendingClose = NO;
     self->m_readable = NO;
@@ -113,7 +113,7 @@
     OpenRequest* request;
     
     [ m_connectMutex lock ];
-    if (m_socket) {
+    if (m_connection) {
         [ m_connectMutex unlock ];
         [NSException raise:@"Error" format:@"Already connected"];
     }
@@ -208,9 +208,9 @@
     m_ch = ch;
 	m_auth = auth;
     
-    m_socket = [ExtSocket getSocketWithHost:m_host port:m_port auth:m_auth];
+    m_connection = [Connection getConnectionWithHost:m_host port:m_port auth:m_auth];
     
-    [ m_socket allocChannel ];
+    [ m_connection allocChannel ];
     
     if (token || tokens == @"") {
         packet = [[ Packet alloc ] initWithChannel:m_ch op:OPEN flag:mode payload:token];
@@ -226,7 +226,7 @@
     
     m_error = @"";
     
-    if (![ m_socket requestOpen:request ]) {
+    if (![ m_connection requestOpen:request ]) {
         [ self checkForChannelError ];
         [NSException raise:@"Error" format:@"Channel already open"];
     }
@@ -239,7 +239,7 @@
     BOOL result;
     
     [ m_connectMutex lock ];
-    if (!m_connected || !m_socket) {
+    if (!m_connected || !m_connection) {
         [ m_connectMutex unlock ];
         [ self checkForChannelError ];
         [NSException raise:@"IOError" format:@"Channel is not conected" ];
@@ -257,9 +257,9 @@
     Packet* packet = [[ Packet alloc ] initWithChannel:m_ch op:DATA flag:priority payload:data];
     
     [ m_connectMutex lock ];
-    ExtSocket *socket = m_socket;
+    Connection *connection = m_connection;
     [ m_connectMutex unlock ];
-    result = [ socket writeBytes:packet ];
+    result = [ connection writeBytes:packet ];
     
     if (!result) {
         [ self checkForChannelError ];
@@ -281,7 +281,7 @@
     BOOL result;
     
     [ m_connectMutex lock ];
-    if (!m_connected || !m_socket) {
+    if (!m_connected || !m_connection) {
         [ m_connectMutex unlock ];
         [ self checkForChannelError ];
         [NSException raise:@"IOError" format:@"Channel is not connected"];
@@ -295,9 +295,9 @@
     Packet* packet = [[ Packet alloc ] initWithChannel:m_ch op:SIGNAL flag:SIG_EMIT payload:data ];
     
     [ m_connectMutex lock ];
-    ExtSocket *socket = m_socket;
+    Connection *connection = m_connection;
     [ m_connectMutex unlock ];
-    result = [ socket writeBytes:packet ];
+    result = [ connection writeBytes:packet ];
     
     if (!result) {
         [ self checkForChannelError ];
@@ -314,7 +314,7 @@
 	Packet *packet;
 	
     [ m_connectMutex lock ];
-    if (!m_socket || m_closing) {
+    if (!m_connection || m_closing) {
         [ m_connectMutex unlock ];
         return;
     }
@@ -324,7 +324,7 @@
 	m_writable = NO;
 	m_emitable = NO;
     
-    if (m_openRequest && [ m_socket cancelOpen:m_openRequest ]) {
+    if (m_openRequest && [ m_connection cancelOpen:m_openRequest ]) {
 		// Open request hasn't been posted yet, which means that it's
 		// safe to destroy channel immediately.
 
@@ -349,14 +349,14 @@
 		
 		@try {
 #ifdef HYDNADEBUG
-			debugPrint(@"ExtSocket", m_ch, @"Sending close signal");
+			debugPrint(@"Connection", m_ch, @"Sending close signal");
 #endif
 			
 			[ m_connectMutex lock ];
-			ExtSocket *socket = m_socket;
+			Connection *connection = m_connection;
 			[ m_connectMutex unlock ];
 			
-			[ socket writeBytes:packet ];
+			[ connection writeBytes:packet ];
 			[ packet release ];
 		}
 		@catch (NSException *e) {
@@ -393,14 +393,14 @@
 		
 		@try {
 #ifdef HYDNADEBUG
-			debugPrint(@"ExtSocket", m_ch, @"Sending close signal");
+			debugPrint(@"Connection", m_ch, @"Sending close signal");
 #endif
 			
 			[ m_connectMutex lock ];
-			ExtSocket *socket = m_socket;
+			Connection *connection = m_connection;
 			[ m_connectMutex unlock ];
 			
-			[ socket writeBytes:packet ];
+			[ connection writeBytes:packet ];
 			[ packet release ];
 		}
 		@catch (NSException *e) {
@@ -431,7 +431,7 @@
 - (void) destroy:(NSString*)error
 {
     [ m_connectMutex lock ];
-	ExtSocket *socket = m_socket;
+	Connection *connection = m_connection;
 	BOOL connected = m_connected;
 	NSUInteger ch = m_ch;
     
@@ -442,10 +442,10 @@
 	m_pendingClose = nil;
 	m_closing = NO;
 	m_openRequest = nil;
-	m_socket = nil;
+	m_connection = nil;
     
-    if (socket) {
-        [ socket deallocChannel:connected ? ch : 0 ];
+    if (connection) {
+        [ connection deallocChannel:connected ? ch : 0 ];
     }
     
     m_error = [ error copy ];
