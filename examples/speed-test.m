@@ -59,7 +59,7 @@ int main(int argc, const char* argv[])
                     
                     if (i == NO_BROADCASTS) {
                         time = getmicrosec() - time;
-                        printf("\nReceived %u packets\n", i);
+                        printf("\nReceived %u frames\n", i);
                         printf("Time: %i ms\n", time/1000);
                         i = 0;
                     }
@@ -68,7 +68,7 @@ int main(int argc, const char* argv[])
                 }
             }
         } else if (strcmp(argv[1], "send") == 0) {
-            printf("Sending %u packets to x11221133\n", NO_BROADCASTS);
+            printf("Sending %u frames to x11221133\n", NO_BROADCASTS);
             
             time = getmicrosec();
             

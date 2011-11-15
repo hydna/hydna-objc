@@ -6,7 +6,7 @@
 #import <Cocoa/Cocoa.h>
 
 #import "OpenRequest.h"
-#import "Packet.h"
+#import "Frame.h"
 
 /**
  *  This class is used internally by the Channel class.
@@ -95,11 +95,11 @@
 - (BOOL) cancelOpen:(OpenRequest*)request;
 
 /**
- *  Writes a packet to the connection.
+ *  Writes a frame to the connection.
  *
- *  @param packet The packet to be sent.
- *  @return YES if the packet was sent.
+ *  @param frame The frame to be sent.
+ *  @return YES if the frame was sent.
  */
-- (BOOL) writeBytes:(Packet*)packet;
+- (BOOL) writeBytes:(Frame*)frame;
 
 @end

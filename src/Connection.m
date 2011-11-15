@@ -39,7 +39,7 @@ static NSMutableDictionary *m_availableConnections = nil;
 - (void) connectHandler:(NSString*)auth;
 
 /**
- *  Handle the Handshake response packet.
+ *  Handle the Handshake response frame.
  */
 - (void) handshakeHandler;
 
@@ -49,41 +49,41 @@ static NSMutableDictionary *m_availableConnections = nil;
 - (void) receiveHandler;
 
 /**
- *  Process an open packet.
+ *  Process an open frame.
  *
- *  @param ch The channel that should receive the open packet.
- *  @param errcode The error code of the open packet.
- *  @param payload The content of the open packet.
+ *  @param ch The channel that should receive the open frame.
+ *  @param errcode The error code of the open frame.
+ *  @param payload The content of the open frame.
  */
-- (void) processOpenPacketWithChannelId:(NSUInteger)ch errcode:(NSInteger)errcode payload:(NSData *)payload;
+- (void) processOpenFrameWithChannelId:(NSUInteger)ch errcode:(NSInteger)errcode payload:(NSData *)payload;
 
 /**
- *  Process a data packet.
+ *  Process a data frame.
  *
  *  @param ch The channel that should receive the data.
  *  @param priority The priority of the data.
  *  @param payload The content of the data.
  */
-- (void) processDataPacketWithChannelId:(NSUInteger)ch priority:(NSInteger)priority payload:(NSData *)payload;
+- (void) processDataFrameWithChannelId:(NSUInteger)ch priority:(NSInteger)priority payload:(NSData *)payload;
 
 /**
- *  Process a signal packet.
+ *  Process a signal frame.
  *
  *  @param channel The channel that should receive the signal.
  *  @param flag The flag of the signal.
  *  @param payload The content of the signal.
  *  @return NO is something went wrong.
  */
-- (BOOL) processSignalPacketWithChannel:(Channel *)channel flag:(NSInteger)flag payload:(NSData *)payload;
+- (BOOL) processSignalFrameWithChannel:(Channel *)channel flag:(NSInteger)flag payload:(NSData *)payload;
 
 /**
- *  Process a signal packet.
+ *  Process a signal frame.
  *
  *  @param ch The channel that should receive the signal.
  *  @param flag The flag of the signal.
  *  @param payload The content of the signal.
  */
-- (void) processSignalPacketWithChannelId:(NSUInteger)ch flag:(NSInteger)flag payload:(NSData *)payload;
+- (void) processSignalFrameWithChannelId:(NSUInteger)ch flag:(NSInteger)flag payload:(NSData *)payload;
 
 /**
  *  Destroy the connection.
@@ -94,7 +94,7 @@ static NSMutableDictionary *m_availableConnections = nil;
 
 /**
  * The method that is called in the new thread.
- * Listens for incoming packets.
+ * Listens for incoming frames.
  *
  * @param param An object with arguments.
  */
@@ -300,7 +300,7 @@ static NSMutableDictionary *m_availableConnections = nil;
 #ifdef HYDNADEBUG
 		debugPrint(@"Connection", chcomp, @"Already connected, sending the new open request");
 #endif
-        [ self writeBytes:[ request packet ]];
+        [ self writeBytes:[ request frame ]];
         [ request setSent:YES ];
     }
 
@@ -540,7 +540,7 @@ static NSMutableDictionary *m_availableConnections = nil;
     
     for (NSString *key in m_pendingOpenRequests) {
         OpenRequest *request = [ m_pendingOpenRequests objectForKey:key ];
-        [ self writeBytes:[ request packet ]];
+        [ self writeBytes:[ request frame ]];
         
         if (m_connected) {
             [ request setSent:YES ];
@@ -554,14 +554,14 @@ static NSMutableDictionary *m_availableConnections = nil;
     }
     
 #ifdef HYDNADEBUG
-	debugPrint(@"Connection", 0, @"Creating a new thread for packet listening");
+	debugPrint(@"Connection", 0, @"Creating a new thread for frame listening");
 #endif
     
     [NSThread detachNewThreadSelector:@selector(listen:) toTarget:self withObject:nil];
     
     /*
     if (!created) {
-        [ self destroy:@"Could not create a new thread for packet listening" ];
+        [ self destroy:@"Could not create a new thread for frame listening" ];
         return;
     }
     */
@@ -639,21 +639,21 @@ static NSMutableDictionary *m_availableConnections = nil;
 #ifdef HYDNADEBUG
 				debugPrint(@"Connection", ch, @"Received open response");
 #endif
-                [ self processOpenPacketWithChannelId:ch errcode:flag payload:data ];
+                [ self processOpenFrameWithChannelId:ch errcode:flag payload:data ];
                 break;
                 
             case DATA:
 #ifdef HYDNADEBUG
 				debugPrint(@"Connection", ch, @"Received data");
 #endif
-                [ self processDataPacketWithChannelId:ch priority:flag payload:data ];
+                [ self processDataFrameWithChannelId:ch priority:flag payload:data ];
                 break;
                 
             case SIGNAL:
 #ifdef HYDNADEBUG
 				debugPrint(@"Connection", ch, @"Received signal");
 #endif
-                [ self processSignalPacketWithChannelId:ch flag:flag payload:data ];
+                [ self processSignalFrameWithChannelId:ch flag:flag payload:data ];
                 break;
         }
         
@@ -666,7 +666,7 @@ static NSMutableDictionary *m_availableConnections = nil;
     [ pool release ];
 }
 
-- (void) processOpenPacketWithChannelId:(NSUInteger)ch errcode:(NSInteger)errcode payload:(NSData*)payload
+- (void) processOpenFrameWithChannelId:(NSUInteger)ch errcode:(NSInteger)errcode payload:(NSData*)payload
 {
     OpenRequest *request = nil;
     Channel *channel;
@@ -678,7 +678,7 @@ static NSMutableDictionary *m_availableConnections = nil;
     [ m_pendingMutex unlock ];
     
     if (!request) {
-        [ self destroy:@"The server sent an invalid open packet" ];
+        [ self destroy:@"The server sent an invalid open frame" ];
         return;
     }
     
@@ -776,7 +776,7 @@ static NSMutableDictionary *m_availableConnections = nil;
             [ m_openWaitQueue removeObjectForKey:[ NSNumber numberWithInteger:ch ]];
         }
         
-        [ self writeBytes:[ request packet ]];
+        [ self writeBytes:[ request frame ]];
         [ request setSent:YES ];
     } else {
         [[ m_pendingOpenRequests objectForKey:[ NSNumber numberWithInteger:ch ]] release ];
@@ -786,7 +786,7 @@ static NSMutableDictionary *m_availableConnections = nil;
     [ m_openWaitMutex unlock ];
 }
 
-- (void) processDataPacketWithChannelId:(NSUInteger)ch priority:(NSInteger)priority payload:(NSData*)payload
+- (void) processDataFrameWithChannelId:(NSUInteger)ch priority:(NSInteger)priority payload:(NSData*)payload
 {
     [ m_openChannelsMutex lock ];
     Channel *channel = [ m_openChannels objectForKey:[ NSNumber numberWithInteger:ch ]];
@@ -799,7 +799,7 @@ static NSMutableDictionary *m_availableConnections = nil;
     }
     
     if ([ payload length ] == 0) {
-        [ self destroy:@"Zero data packet received" ];
+        [ self destroy:@"Zero data frame received" ];
         return;
     }
     
@@ -807,7 +807,7 @@ static NSMutableDictionary *m_availableConnections = nil;
     [ channel addData:data ];
 }
 
-- (BOOL) processSignalPacketWithChannel:(Channel*)channel flag:(NSInteger)flag payload:(NSData*)payload
+- (BOOL) processSignalFrameWithChannel:(Channel*)channel flag:(NSInteger)flag payload:(NSData*)payload
 {
     ChannelSignal *signal;
     
@@ -835,7 +835,7 @@ static NSMutableDictionary *m_availableConnections = nil;
     return YES;
 }
 
-- (void) processSignalPacketWithChannelId:(NSUInteger)ch flag:(NSInteger)flag payload:(NSData*)payload
+- (void) processSignalFrameWithChannelId:(NSUInteger)ch flag:(NSInteger)flag payload:(NSData*)payload
 {
     if (ch == 0) {
         BOOL destroying = NO;
@@ -861,7 +861,7 @@ static NSMutableDictionary *m_availableConnections = nil;
                 [ m_closingMutex unlock ];
             }
             
-            if (![ self processSignalPacketWithChannel:channel flag:flag payload:payloadCopy ]) {
+            if (![ self processSignalFrameWithChannel:channel flag:flag payload:payloadCopy ]) {
                 [ m_openChannels removeObjectForKey:key ];
             }
         }
@@ -880,17 +880,17 @@ static NSMutableDictionary *m_availableConnections = nil;
         
         if (!channel) {
             [ m_openChannelsMutex unlock ];
-            [ self destroy:@"Packet sent to unknown channel" ];
+            [ self destroy:@"Frame sent to unknown channel" ];
             return;
         }
 		
 		if (flag != SIG_EMIT && ![ channel isClosing ]) {
 			[ m_openChannelsMutex unlock ];
 			
-			Packet *packet = [[ Packet alloc ] initWithChannel:ch op:SIGNAL flag:SIG_END payload:payload ];
+			Frame *frame = [[ Frame alloc ] initWithChannel:ch op:SIGNAL flag:SIG_END payload:payload ];
 			
 			@try {
-				[ self writeBytes:packet ];
+				[ self writeBytes:frame ];
 			}
 			@catch (NSException *e) {
 				[ payload release ];
@@ -900,7 +900,7 @@ static NSMutableDictionary *m_availableConnections = nil;
 			return;
 		}
         
-        [ self processSignalPacketWithChannel:channel flag:flag payload:payload ];
+        [ self processSignalFrameWithChannel:channel flag:flag payload:payload ];
         [ m_openChannelsMutex unlock ];
     }
 
@@ -992,12 +992,12 @@ static NSMutableDictionary *m_availableConnections = nil;
     [ m_destroyingMutex unlock ];
 }
 
-- (BOOL) writeBytes:(Packet*)packet
+- (BOOL) writeBytes:(Frame*)frame
 {
     if (m_handshaked) {
         NSInteger n = -1;
-        NSInteger size = [ packet size ];
-        const char* data = [ packet data ];
+        NSInteger size = [ frame size ];
+        const char* data = [ frame data ];
         NSInteger offset = 0;
         
         while (offset < size && n != 0) {

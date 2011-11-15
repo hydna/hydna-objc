@@ -1,5 +1,5 @@
 //
-//  Packet.h
+//  Frame.h
 //  hydna-objc
 //
 
@@ -35,7 +35,7 @@ enum {
 extern const unsigned int PAYLOAD_MAX_LIMIT;
 
 
-@interface Packet : NSObject {
+@interface Frame : NSObject {
     NSMutableData *m_bytes;
 }
 

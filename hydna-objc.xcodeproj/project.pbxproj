@@ -27,8 +27,8 @@
 		293208651304820800D9DE1E /* Channel.m in Sources */ = {isa = PBXBuildFile; fileRef = 293208631304820800D9DE1E /* Channel.m */; };
 		293208681304821F00D9DE1E /* Connection.h in Headers */ = {isa = PBXBuildFile; fileRef = 293208661304821F00D9DE1E /* Connection.h */; };
 		293208691304821F00D9DE1E /* Connection.m in Sources */ = {isa = PBXBuildFile; fileRef = 293208671304821F00D9DE1E /* Connection.m */; };
-		2932086C1304822E00D9DE1E /* Packet.h in Headers */ = {isa = PBXBuildFile; fileRef = 2932086A1304822E00D9DE1E /* Packet.h */; };
-		2932086D1304822E00D9DE1E /* Packet.m in Sources */ = {isa = PBXBuildFile; fileRef = 2932086B1304822E00D9DE1E /* Packet.m */; };
+		2932086C1304822E00D9DE1E /* Frame.h in Headers */ = {isa = PBXBuildFile; fileRef = 2932086A1304822E00D9DE1E /* Frame.h */; };
+		2932086D1304822E00D9DE1E /* Frame.m in Sources */ = {isa = PBXBuildFile; fileRef = 2932086B1304822E00D9DE1E /* Frame.m */; };
 		88F3BF0A137EA88E00BE169C /* hydna-objc.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8DC2EF5B0486A6940098B216 /* hydna-objc.framework */; };
 		88F3BF0B137EA89500BE169C /* multiple-channels.m in Sources */ = {isa = PBXBuildFile; fileRef = 88F3BEFB137EA85700BE169C /* multiple-channels.m */; };
 		88F3BF54137EB3C900BE169C /* DebugHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = 88F3BF52137EB3C900BE169C /* DebugHelper.h */; };
@@ -100,8 +100,8 @@
 		293208631304820800D9DE1E /* Channel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = Channel.m; path = src/Channel.m; sourceTree = "<group>"; };
 		293208661304821F00D9DE1E /* Connection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Connection.h; path = src/Connection.h; sourceTree = "<group>"; };
 		293208671304821F00D9DE1E /* Connection.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = Connection.m; path = src/Connection.m; sourceTree = "<group>"; };
-		2932086A1304822E00D9DE1E /* Packet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Packet.h; path = src/Packet.h; sourceTree = "<group>"; };
-		2932086B1304822E00D9DE1E /* Packet.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = Packet.m; path = src/Packet.m; sourceTree = "<group>"; };
+		2932086A1304822E00D9DE1E /* Frame.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Frame.h; path = src/Frame.h; sourceTree = "<group>"; };
+		2932086B1304822E00D9DE1E /* Frame.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = Frame.m; path = src/Frame.m; sourceTree = "<group>"; };
 		32DBCF5E0370ADEE00C91783 /* hydna-objc_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "hydna-objc_Prefix.pch"; sourceTree = "<group>"; };
 		88F3BEFB137EA85700BE169C /* multiple-channels.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "multiple-channels.m"; path = "examples/multiple-channels.m"; sourceTree = "<group>"; };
 		88F3BF02137EA86700BE169C /* multiple-streams */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "multiple-streams"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -215,8 +215,8 @@
 				293208671304821F00D9DE1E /* Connection.m */,
 				293208561304800E00D9DE1E /* OpenRequest.h */,
 				293208571304800E00D9DE1E /* OpenRequest.m */,
-				2932086A1304822E00D9DE1E /* Packet.h */,
-				2932086B1304822E00D9DE1E /* Packet.m */,
+				2932086A1304822E00D9DE1E /* Frame.h */,
+				2932086B1304822E00D9DE1E /* Frame.m */,
 				293208621304820800D9DE1E /* Channel.h */,
 				293208631304820800D9DE1E /* Channel.m */,
 				293208091304623B00D9DE1E /* ChannelData.h */,
@@ -281,7 +281,7 @@
 				293208581304800E00D9DE1E /* OpenRequest.h in Headers */,
 				293208641304820800D9DE1E /* Channel.h in Headers */,
 				293208681304821F00D9DE1E /* Connection.h in Headers */,
-				2932086C1304822E00D9DE1E /* Packet.h in Headers */,
+				2932086C1304822E00D9DE1E /* Frame.h in Headers */,
 				2931A1141315A6DA003CEE46 /* ChannelError.h in Headers */,
 				88F3BF54137EB3C900BE169C /* DebugHelper.h in Headers */,
 			);
@@ -485,7 +485,7 @@
 				293208591304800E00D9DE1E /* OpenRequest.m in Sources */,
 				293208651304820800D9DE1E /* Channel.m in Sources */,
 				293208691304821F00D9DE1E /* Connection.m in Sources */,
-				2932086D1304822E00D9DE1E /* Packet.m in Sources */,
+				2932086D1304822E00D9DE1E /* Frame.m in Sources */,
 				2931A1151315A6DA003CEE46 /* ChannelError.m in Sources */,
 				88F3BF55137EB3C900BE169C /* DebugHelper.m in Sources */,
 			);

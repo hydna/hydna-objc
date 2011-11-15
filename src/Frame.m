@@ -1,14 +1,14 @@
 //
-//  Packet.m
+//  Frame.m
 //  hydna-objc
 //
 
-#import "Packet.h"
+#import "Frame.h"
 
 // Upper payload limit (10kb)
 const unsigned int PAYLOAD_MAX_LIMIT = 10 * 1024;
 
-@implementation Packet
+@implementation Frame
 
 - (id) initWithChannel:(NSUInteger)ch op:(NSUInteger)op flag:(NSUInteger)flag payload:(NSData*)payload
 {

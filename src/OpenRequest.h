@@ -5,7 +5,7 @@
 
 #import <Cocoa/Cocoa.h>
 
-#import "Packet.h"
+#import "Frame.h"
 
 @class Channel;
 
@@ -16,15 +16,15 @@
 @interface OpenRequest : NSObject {
     Channel *m_channel;
     NSUInteger m_ch;
-    Packet *m_packet;
+    Frame *m_frame;
     BOOL m_sent;
 }
 
-- (id) initWith:(Channel*)channel ch:(NSUInteger)ch packet:(Packet*)packet;
+- (id) initWith:(Channel*)channel ch:(NSUInteger)ch frame:(Frame*)frame;
 
 @property (readonly,getter=channel) Channel *m_channel;
 @property (readonly,getter=ch) NSUInteger m_ch;
-@property (readonly,getter=packet) Packet *m_packet;
+@property (readonly,getter=frame) Frame *m_frame;
 @property (getter=sent,setter=setSent:) BOOL m_sent;
 
 @end

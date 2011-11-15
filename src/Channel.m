@@ -109,7 +109,7 @@
 
 - (void) connect:(NSString *)expr mode:(NSUInteger)mode token:(NSData *)token
 {
-    Packet* packet;
+    Frame* frame;
     OpenRequest* request;
     
     [ m_connectMutex lock ];
@@ -213,12 +213,12 @@
     [ m_connection allocChannel ];
     
     if (token || tokens == @"") {
-        packet = [[ Packet alloc ] initWithChannel:m_ch op:OPEN flag:mode payload:token];
+        frame = [[ Frame alloc ] initWithChannel:m_ch op:OPEN flag:mode payload:token];
     } else {
-        packet = [[ Packet alloc ] initWithChannel:m_ch op:OPEN flag:mode payload:[ tokens dataUsingEncoding:NSUTF8StringEncoding]];
+        frame = [[ Frame alloc ] initWithChannel:m_ch op:OPEN flag:mode payload:[ tokens dataUsingEncoding:NSUTF8StringEncoding]];
     }
 
-    request = [[ OpenRequest alloc ] initWith:self ch:m_ch packet:packet ];
+    request = [[ OpenRequest alloc ] initWith:self ch:m_ch frame:frame ];
     
     if (m_error != @"") {
         [ m_error release ];
@@ -254,12 +254,12 @@
         [NSException raise:@"RangeError" format:@"Priority must be between 1-3" ];
     }
     
-    Packet* packet = [[ Packet alloc ] initWithChannel:m_ch op:DATA flag:priority payload:data];
+    Frame* frame = [[ Frame alloc ] initWithChannel:m_ch op:DATA flag:priority payload:data];
     
     [ m_connectMutex lock ];
     Connection *connection = m_connection;
     [ m_connectMutex unlock ];
-    result = [ connection writeBytes:packet ];
+    result = [ connection writeBytes:frame ];
     
     if (!result) {
         [ self checkForChannelError ];
@@ -292,12 +292,12 @@
         [NSException raise:@"Error" format:@"You do not have permission to send signals" ];
     }
     
-    Packet* packet = [[ Packet alloc ] initWithChannel:m_ch op:SIGNAL flag:SIG_EMIT payload:data ];
+    Frame* frame = [[ Frame alloc ] initWithChannel:m_ch op:SIGNAL flag:SIG_EMIT payload:data ];
     
     [ m_connectMutex lock ];
     Connection *connection = m_connection;
     [ m_connectMutex unlock ];
-    result = [ connection writeBytes:packet ];
+    result = [ connection writeBytes:frame ];
     
     if (!result) {
         [ self checkForChannelError ];
@@ -311,7 +311,7 @@
 
 - (void) close
 {
-	Packet *packet;
+	Frame *frame;
 	
     [ m_connectMutex lock ];
     if (!m_connection || m_closing) {
@@ -335,13 +335,13 @@
 		return;
 	}
 	
-	packet = [[ Packet alloc ] initWithChannel:m_ch op:SIGNAL flag:SIG_END payload:nil ];
+	frame = [[ Frame alloc ] initWithChannel:m_ch op:SIGNAL flag:SIG_END payload:nil ];
 	
 	if (m_openRequest) {
 		// Open request is not responded to yet. Wait to send ENDSIG until
 		// we get an OPENRESP.
 		
-		m_pendingClose = packet;
+		m_pendingClose = frame;
 		[ m_connectMutex unlock ];
 	} else {
 		[ m_connectMutex unlock ];
@@ -356,12 +356,12 @@
 			Connection *connection = m_connection;
 			[ m_connectMutex unlock ];
 			
-			[ connection writeBytes:packet ];
-			[ packet release ];
+			[ connection writeBytes:frame ];
+			[ frame release ];
 		}
 		@catch (NSException *e) {
 			[ m_connectMutex unlock ];
-			[ packet release ];
+			[ frame release ];
 			[ self destroy: [ e reason ] ];
 		}
     }
@@ -371,7 +371,7 @@
 {
     [ m_connectMutex lock ];
 	NSUInteger origch = m_ch;
-	Packet *packet;
+	Frame *frame;
 	
 	m_openRequest = nil;
     m_ch = respch;
@@ -379,16 +379,16 @@
 	m_message = message;
     
     if (m_pendingClose) {
-		packet = m_pendingClose;
+		frame = m_pendingClose;
 		m_pendingClose = nil;
 		
         [ m_connectMutex unlock ];
         
 		if (origch != respch) {
 			// channel is changed. We need to change the channel of the
-			//packet before sending to serv
+			//frame before sending to serv
 			
-			[ packet setChannel:respch ];
+			[ frame setChannel:respch ];
 		}
 		
 		@try {
@@ -400,15 +400,15 @@
 			Connection *connection = m_connection;
 			[ m_connectMutex unlock ];
 			
-			[ connection writeBytes:packet ];
-			[ packet release ];
+			[ connection writeBytes:frame ];
+			[ frame release ];
 		}
 		@catch (NSException *e) {
-			// Something wen't terrible wrong. Queue packet and wait
+			// Something wen't terrible wrong. Queue frame and wait
 			// for a reconnect.
 			
 			[ m_connectMutex unlock ];
-			[ packet release ];
+			[ frame release ];
 			[ self destroy: [ e reason ] ];
 		}
     } else {

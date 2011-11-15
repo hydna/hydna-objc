@@ -37,7 +37,7 @@ typedef enum {
     
     BOOL m_connected;
 	BOOL m_closing;
-	Packet *m_pendingClose;
+	Frame *m_pendingClose;
     BOOL m_readable;
     BOOL m_writable;
     BOOL m_emitable;
