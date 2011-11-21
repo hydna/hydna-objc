@@ -27,10 +27,7 @@ typedef enum {
  *  to communicate with a server.
  */
 @interface Channel : NSObject {
-    NSString *m_host;
-    NSUInteger m_port;
     NSUInteger m_ch;
-	NSString *m_auth;
 	NSString *m_message;
     
     Connection *m_connection;
@@ -62,6 +59,20 @@ typedef enum {
 - (id) init;
 
 - (void) dealloc;
+
+/**
+ *  Checks if redirects should be followed.
+ *
+ *  @return The current status if redirects should be followed or not.
+ */
+- (BOOL) getFollowRedirects;
+
+/**
+ *  Sets if redirects should be followed or not.
+ *
+ *  @param value The new follow redirects status.
+ */
+- (void) setFollowRedirects:(BOOL)value;
 
 /**
  *  Checks the connected state for this Channel instance.

@@ -6,6 +6,7 @@
 #import "Connection.h"
 #import "Channel.h"
 #import "ChannelError.h"
+#import "URL.h"
 
 #ifdef HYDNADEBUG
 #import "DebugHelper.h"
@@ -17,6 +18,8 @@
 
 static NSLock *m_connectionMutex;
 static NSMutableDictionary *m_availableConnections = nil;
+static BOOL m_followRedirects = YES;
+const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
 
 @interface Connection ()
 
@@ -127,6 +130,16 @@ static NSMutableDictionary *m_availableConnections = nil;
     return connection;
 }
 
++ (BOOL) getFollowRedirects
+{
+	return m_followRedirects;
+}
+
++ (void) setFollowRedirects:(BOOL)value
+{
+	m_followRedirects = value;
+}
+
 - (id) initWithHost:(NSString*)host port:(NSUInteger)port auth:(NSString*)auth
 {
     if (!(self = [super init])) {
@@ -151,6 +164,7 @@ static NSMutableDictionary *m_availableConnections = nil;
     self->m_host = host;
     self->m_port = port;
 	self->m_auth = auth;
+	self->m_attempt = 0;
     
     self->m_pendingOpenRequests = [[ NSMutableDictionary alloc ] init ];
     self->m_openChannels = [[ NSMutableDictionary alloc ] init ];
@@ -196,7 +210,7 @@ static NSMutableDictionary *m_availableConnections = nil;
 - (void) deallocChannel:(NSUInteger)ch;
 {
 #ifdef HYDNADEBUG
-	debugPrint(@"Connection", ch, @"Deallocatin a channel");
+	debugPrint(@"Connection", ch, @"Deallocating a channel");
 #endif
     [ m_destroyingMutex lock ];
     [ m_closingMutex lock ];
@@ -371,8 +385,10 @@ static NSMutableDictionary *m_availableConnections = nil;
     NSArray *addresses =  [ nshost addresses ];
     NSString *address = @"";
     
+	++m_attempt;
+	
 #ifdef HYDNADEBUG
-	debugPrint(@"Connection", 0, @"Connecting...");
+	debugPrint(@"Connection", 0, [ NSString stringWithFormat:@"Connecting, attempt %i", m_attempt]);
 #endif
     
     for (NSString *a in addresses) {
@@ -404,13 +420,13 @@ static NSMutableDictionary *m_availableConnections = nil;
             
             if (connect(m_connectionFDS, (struct sockaddr *)&server, sizeof(server)) == -1) {
                 if (connect(m_connectionFDS, (struct sockaddr *)&server, sizeof(server)) == -1) {
-                    [ self destroy:[ NSString stringWithFormat:@"Could not connect to the host \"%@\"", host ]];
+                    [ self destroy:[ NSString stringWithFormat:@"Could not connect to the host \"%@\" on the port %i", host, port ]];
                 } else {
                     [ self connectHandler:auth ];
                 }
             } else {
 #ifdef HYDNADEBUG
-				debugPrint(@"Connection", 0, @"Connection connected, sending HTTP upgrade request");
+				debugPrint(@"Connection", 0, @"Connected, sending HTTP upgrade request");
 #endif
                 [ self connectHandler:auth ];
             }
@@ -432,11 +448,14 @@ static NSMutableDictionary *m_availableConnections = nil;
 	NSString *request = [ NSString stringWithFormat:@"GET /%@ HTTP/1.1\n"
 						"Connection: upgrade\n"
 						"Upgrade: winksock/1\n"
-						"Host: %@", auth, m_host ];
+						"Host: %@\n"
+						"X-Follow-Redirects: ", auth, m_host ];
 	
 	// Redirects are not supported yet
-	if (true) {
-		request = [ request stringByAppendingFormat:@"\nX-Follow-Redirects: no" ];
+	if (m_followRedirects) {
+		request = [ request stringByAppendingFormat:@"yes" ];
+	} else {
+		request = [ request stringByAppendingFormat:@"no" ];
 	}
 	
 	// End of upgrade request
@@ -467,6 +486,8 @@ static NSMutableDictionary *m_availableConnections = nil;
 	char cr = '\r';
 	BOOL fieldsLeft = YES;
 	BOOL gotResponse = NO;
+	BOOL gotRedirect = NO;
+	NSString *location = @"";
 	
 	while (fieldsLeft) {
 		NSMutableString *line = [NSMutableString stringWithCapacity:100];
@@ -503,11 +524,23 @@ static NSMutableDictionary *m_availableConnections = nil;
 					case 101:
 						// Everything is ok, continue.
 						break;
+					case 300:
 					case 301:
 					case 302:
-					case 307:
-						[ self destroy:@"HTTP redirect is not supported yet" ];
-						return;
+					case 303:
+					case 304:
+						if (!m_followRedirects) {
+							[ self destroy:@"Bad handshake (HTTP-redirection disabled)" ];
+							return;
+						}
+						
+						if (m_attempt > MAX_REDIRECT_ATTEMPTS) {
+							[ self destroy:@"Bad handshake (Too many redirect attempts)" ];
+							return;
+						}
+						
+						gotRedirect = YES;
+						break;
 					default:
 						[ self destroy:[ NSString stringWithFormat:@"Server responded with bad HTTP response code, %i", code ] ];
 						return;
@@ -518,17 +551,48 @@ static NSMutableDictionary *m_availableConnections = nil;
 				NSString *lowline = [ line lowercaseString ];
 				NSRange pos;
 				
-				pos = [ lowline rangeOfString:@"upgrade: " ];
-				if (pos.length != 0) {
-					NSString *header = [ lowline substringFromIndex:pos.location + 9 ];
+				if (gotRedirect) {
+					pos = [ lowline rangeOfString:@"location: " ];
+					if (pos.length != 0) {
+						location = [ lowline substringFromIndex:pos.location + 10 ];
+					}
+				} else {
+					pos = [ lowline rangeOfString:@"upgrade: " ];
+					if (pos.length != 0) {
+						NSString *header = [ lowline substringFromIndex:pos.location + 9 ];
 					
-					if (![ header isEqualToString:@"winksock/1" ]) {
-						[ self destroy:[ NSString stringWithFormat:@"Bad protocol version: %@", header ] ];
-						return;
+						if (![ header isEqualToString:@"winksock/1" ]) {
+							[ self destroy:[ NSString stringWithFormat:@"Bad protocol version: %@", header ] ];
+							return;
+						}
 					}
 				}
 			}
 		}
+	}
+
+	if (gotRedirect) {
+		m_connected = NO;
+		
+#ifdef HYDNADEBUG
+		debugPrint(@"Connection", 0, [ NSString stringWithFormat:@"Redirected to location: %@", location]);
+#endif
+		URL *url = [[[ URL alloc ] initWithExpr:location ] autorelease ];
+		
+		if (![[ url protocol ] isEqualToString:@"http" ]) {
+			if ([[ url protocol ] isEqualToString:@"https" ]) {
+				[ self destroy:@"The protocol HTTPS is not supported" ];
+			} else {
+				[ self destroy:[ NSString stringWithFormat:@"Unknown protocol, \"%@\"", [ url protocol ]]];
+			}
+		}
+		
+		if (![[ url error ] isEqualToString:@"" ]) {
+			[ self destroy:[ NSString stringWithFormat:@"%@", [ url error ]]];
+		}
+		
+		[ self connectConnectionWithHost:[ url host ] port:[ url port ] auth:[ url path ]];
+		return;
 	}
     
     m_handshaked = YES;
@@ -877,16 +941,14 @@ static NSMutableDictionary *m_availableConnections = nil;
     } else {
         [ m_openChannelsMutex lock ];
         Channel *channel = [ m_openChannels objectForKey:[ NSNumber numberWithInteger:ch ]];
-        
+        [ m_openChannelsMutex unlock ];
+		
         if (!channel) {
-            [ m_openChannelsMutex unlock ];
             [ self destroy:@"Frame sent to unknown channel" ];
             return;
         }
 		
 		if (flag != SIG_EMIT && ![ channel isClosing ]) {
-			[ m_openChannelsMutex unlock ];
-			
 			Frame *frame = [[ Frame alloc ] initWithChannel:ch op:SIGNAL flag:SIG_END payload:payload ];
 			
 			@try {
@@ -899,9 +961,8 @@ static NSMutableDictionary *m_availableConnections = nil;
 			
 			return;
 		}
-        
+		
         [ self processSignalFrameWithChannel:channel flag:flag payload:payload ];
-        [ m_openChannelsMutex unlock ];
     }
 
 }

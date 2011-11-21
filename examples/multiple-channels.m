@@ -11,10 +11,10 @@ int main(int argc, const char* argv[])
     NSAutoreleasePool *pool = [[ NSAutoreleasePool alloc ] init ];
     
     Channel *channel = [[ Channel alloc ] init ];
-    [ channel connect:@"localhost/x11221133" mode:READWRITE token:nil ];
+    [ channel connect:@"localhost:7010/x11221133" mode:READWRITE token:nil ];
     
 	Channel *channel2 = [[ Channel alloc ] init ];
-    [ channel2 connect:@"localhost/x3333" mode:READWRITE token:nil ];
+    [ channel2 connect:@"localhost:7010/x3333" mode:READWRITE token:nil ];
 	
     while (![ channel isConnected ]) {
         [ channel checkForChannelError ];

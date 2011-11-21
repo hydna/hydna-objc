@@ -8,6 +8,8 @@
 #import "OpenRequest.h"
 #import "Frame.h"
 
+extern const unsigned int MAX_REDIRECT_ATTEMPTS;
+
 /**
  *  This class is used internally by the Channel class.
  *  A user of the library should not create an instance of this class.
@@ -32,7 +34,8 @@
     NSUInteger m_port;
 	NSString *m_auth;
     NSInteger m_connectionFDS;
-    
+    NSUInteger m_attempt;
+	
     NSMutableDictionary *m_pendingOpenRequests;
     NSMutableDictionary *m_openChannels;
     NSMutableDictionary *m_openWaitQueue;
@@ -47,6 +50,21 @@
  *  @param port The port associated with the connection.
  */
 + (id) getConnectionWithHost:(NSString*)host port:(NSUInteger)port auth:(NSString*)auth;
+
+
+/**
+ *  Checks if redirects should be followed.
+ *
+ *  @return The current status if redirects should be followed or not.
+ */
++ (BOOL) getFollowRedirects;
+
+/**
+ *  Sets if redirects should be followed or not.
+ *  
+ *  @param value The new follow redirects status.
+ */
++ (void) setFollowRedirects:(BOOL)value;
 
 /**
  *  Initializes a new Channel instance.

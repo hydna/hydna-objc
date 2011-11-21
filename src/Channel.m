@@ -4,6 +4,7 @@
 //
 
 #import "Channel.h"
+#import "URL.h"
 
 #ifdef HYDNADEBUG
 #import "DebugHelper.h"
@@ -17,10 +18,7 @@
         return nil;
     }
     
-    self->m_host = @"";
-    self->m_port = 80;
     self->m_ch = 0;
-	self->m_auth = @"";
 	self->m_message = @"";
     self->m_connection = nil;
     self->m_connected = NO;
@@ -49,6 +47,16 @@
     [ m_signalMutex release ];
     
     [ super dealloc ];
+}
+
+- (BOOL) getFollowRedirects
+{
+	return [ Connection getFollowRedirects ];
+}
+
+- (void) setFollowRedirects:(BOOL)value
+{
+	[ Connection setFollowRedirects:value ];
 }
 
 - (BOOL) isConnected
@@ -133,52 +141,31 @@
     m_writable = ((m_mode & WRITE) == WRITE);
     m_emitable = ((m_mode & EMIT) == EMIT);
     
-    NSString *host = expr;
-    NSUInteger port = 80;
-    NSUInteger ch = 1;
+	URL* url = [[[ URL alloc ] initWithExpr:expr ] autorelease ];
     NSString *tokens = @"";
-	NSString *auth = @"";
+	NSString *chs = @"";
+	NSUInteger ch = 1;
     NSRange pos;
 	
-	// Host can be on the form "http://auth@localhost:80/x00112233?token"
-	
-	// Take out the protocol
-    pos = [ host rangeOfString:@"://" ];
-    if (pos.length != 0) {
-		NSString *protocol = [ host substringWithRange: NSMakeRange(0, pos.location)];
-		protocol = [ protocol lowercaseString ];
-        host = [ host substringFromIndex:pos.location + 3];
-		
-		if (![ protocol isEqualToString:@"http" ]) {
-			if ([protocol isEqualToString:@"https" ]) {
-				[NSException raise:@"Error" format:@"The protocol HTTPS is not supported"];
-			} else {
-				[NSException raise:@"Error" format:@"Unknown protocol, \"%@\"", protocol];
-			}
-
+	if (![[ url protocol ] isEqualToString:@"http" ]) {
+		if ([[ url protocol ] isEqualToString:@"https" ]) {
+			[NSException raise:@"Error" format:@"The protocol HTTPS is not supported"];
+		} else {
+			[NSException raise:@"Error" format:@"Unknown protocol, \"%@\"", [ url protocol ]];
 		}
+	}
+	
+    if (![[ url error ] isEqualToString:@"" ]) {
+        [NSException raise:@"Error" format:@"%@", [ url error ]];
     }
 	
-	// Take out the auth
-    pos = [ host rangeOfString:@"@" ];
-    if (pos.length != 0) {
-        auth = [ host substringToIndex:pos.location ];
-        host = [ host substringFromIndex:pos.location + 1 ];
-    }
-	
-	// Take out the token
-    pos = [ host rangeOfString:@"?" ];
-    if (pos.length != 0) {
-        tokens = [ host substringFromIndex:pos.location + 1];
-        host = [ host substringToIndex:pos.location ];
-    }
+	chs = [ url path ];
     
 	// Take out the channel
-    pos = [ host rangeOfString:@"/x" ];
+    pos = [ chs rangeOfString:@"x" ];
     if (pos.length != 0) {
         unsigned int addri;
-        NSString *addrs = [ host substringFromIndex:pos.location + 2];
-        host = [ host substringToIndex:pos.location ];
+        NSString *addrs = [ chs substringFromIndex:pos.location + 1];
         
         BOOL result = [[NSScanner scannerWithString:addrs] scanHexInt:&addri];
         
@@ -189,26 +176,13 @@
         }
 
     } else {
-        pos = [ host rangeOfString:@"/" ];
-        if (pos.length != 0) {
-            ch = [[ host substringFromIndex:pos.location + 1] integerValue];
-            host = [ host substringToIndex:pos.location ];
-        }
+        ch = [[ chs substringFromIndex:pos.location] integerValue];
     }
-    
-	// Take out the port
-    pos = [ host rangeOfString:@":" ];
-    if (pos.length != 0) {
-        port = [[ host substringFromIndex:pos.location + 1] integerValue];
-        host = [ host substringToIndex:pos.location ];
-    }
-    
-    m_host = host;
-    m_port = port;
+	
+	tokens = [ url token ];
     m_ch = ch;
-	m_auth = auth;
     
-    m_connection = [Connection getConnectionWithHost:m_host port:m_port auth:m_auth];
+    m_connection = [Connection getConnectionWithHost:[ url host ] port:[ url port ] auth:[ url auth ]];
     
     [ m_connection allocChannel ];
     
