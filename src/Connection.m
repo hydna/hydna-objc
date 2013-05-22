@@ -445,10 +445,10 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
     NSInteger n = -1;
     NSUInteger offset = 0;
     
-	NSString *request = [ NSString stringWithFormat:@"GET /%@ HTTP/1.1\n"
-						"Connection: upgrade\n"
-						"Upgrade: winksock/1\n"
-						"Host: %@\n"
+	NSString *request = [ NSString stringWithFormat:@"GET /%@ HTTP/1.1\r\n"
+						"Connection: upgrade\r\n"
+						"Upgrade: winksock/1\r\n"
+						"Host: %@\r\n"
 						"X-Follow-Redirects: ", auth, m_host ];
 	
 	// Redirects are not supported yet
@@ -459,7 +459,7 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
 	}
 	
 	// End of upgrade request
-	request = [ request stringByAppendingFormat:@"\n\n" ];
+	request = [ request stringByAppendingFormat:@"\r\n\r\n" ];
 	
 	data = [ request UTF8String ];
 	length = [ request length ];
