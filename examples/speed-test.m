@@ -35,7 +35,7 @@ int main(int argc, const char* argv[])
     
     @try {
         Channel *channel = [[ Channel alloc ] init ];
-        [ channel connect:@"localhost:7010/x11221133" mode:READWRITE token:nil ];
+        [ channel connect:@"public.hydna.net/10" mode:READWRITE token:nil ];
         
         while (![ channel isConnected ]) {
             [ channel checkForChannelError ];
@@ -45,7 +45,7 @@ int main(int argc, const char* argv[])
         int time = 0;
         
         if (strcmp(argv[1], "receive") == 0) {
-            printf("Receiving from x11221133\n");
+            printf("Receiving from 10\n");
             
             for (;;) {
                 if (![ channel isDataEmpty ]) {
@@ -68,7 +68,7 @@ int main(int argc, const char* argv[])
                 }
             }
         } else if (strcmp(argv[1], "send") == 0) {
-            printf("Sending %u frames to x11221133\n", NO_BROADCASTS);
+            printf("Sending %u frames to 10\n", NO_BROADCASTS);
             
             time = getmicrosec();
             

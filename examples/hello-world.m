@@ -11,7 +11,7 @@ int main(int argc, const char* argv[])
     NSAutoreleasePool *pool = [[ NSAutoreleasePool alloc ] init ];
     
     Channel *channel = [[ Channel alloc ] init ];
-    [ channel connect:@"localhost:7010/x11221133" mode:READWRITE token:nil ];
+    [ channel connect:@"public.hydna.net/1" mode:READWRITE token:nil ];
     
     while (![ channel isConnected ]) {
         [ channel checkForChannelError ];
@@ -23,7 +23,7 @@ int main(int argc, const char* argv[])
 		printf("%s\n", [ welcomeMessage UTF8String ]);
 	}
     
-    [ channel writeString:@"Hello World" ];
+    [ channel writeString:@"Hello World from obj-c" ];
     
     for (;;) {
         if (![ channel isDataEmpty ]) {

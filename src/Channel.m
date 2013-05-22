@@ -145,7 +145,6 @@
     NSString *tokens = @"";
 	NSString *chs = @"";
 	NSUInteger ch = 1;
-    NSRange pos;
 	
 	if (![[ url protocol ] isEqualToString:@"http" ]) {
 		if ([[ url protocol ] isEqualToString:@"https" ]) {
@@ -161,11 +160,9 @@
 	
 	chs = [ url path ];
     
-	// Take out the channel
-    pos = [ chs rangeOfString:@"x" ];
-    if (pos.length != 0) {
+    if (chs.length != 0) {
         unsigned int addri;
-        NSString *addrs = [ chs substringFromIndex:pos.location + 1];
+        NSString *addrs = chs;
         
         BOOL result = [[NSScanner scannerWithString:addrs] scanHexInt:&addri];
         
@@ -176,7 +173,7 @@
         }
 
     } else {
-        ch = [[ chs substringFromIndex:pos.location] integerValue];
+        ch = 1;
     }
 	
 	tokens = [ url token ];
