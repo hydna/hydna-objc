@@ -145,6 +145,8 @@
     NSString *tokens = @"";
 	NSString *chs = @"";
 	NSUInteger ch = 1;
+    int pos;
+    unichar slash = @"/";
 	
 	if (![[ url protocol ] isEqualToString:@"http" ]) {
 		if ([[ url protocol ] isEqualToString:@"https" ]) {
@@ -153,6 +155,7 @@
 			[NSException raise:@"Error" format:@"Unknown protocol, \"%@\"", [ url protocol ]];
 		}
 	}
+    
 	
     if (![[ url error ] isEqualToString:@"" ]) {
         [NSException raise:@"Error" format:@"%@", [ url error ]];
@@ -160,20 +163,42 @@
 	
 	chs = [ url path ];
     
-    if (chs.length != 0) {
-        unsigned int addri;
-        NSString *addrs = chs;
+    if(chs.length == 0 || (chs.length == 1 && [chs characterAtIndex:0] == slash)){
+        chs = @"1";
+    }
+    
+    
+    NSRange range = [chs rangeOfString:@"x"];
+    if (range.length > 0){
+        pos = range.location;
+    }else{
+        pos = -1;
+    }
+    
+    
+    unsigned int addri;
+    
+    
+    if (pos != -1) {
+        NSString *addrs = [chs substringFromIndex:(pos+1)];
         
         BOOL result = [[NSScanner scannerWithString:addrs] scanHexInt:&addri];
         
         if (!result) {
             [NSException raise:@"Error" format:@"Could not read the channel \"%@\"", addrs];
-        } else {
+        }else{
             ch = addri;
         }
 
-    } else {
-        ch = 1;
+    }else{
+        NSString *addrs = chs;
+        BOOL result = [[NSScanner scannerWithString:addrs] scanHexInt:&addri];
+        
+        if (!result) {
+            [NSException raise:@"Error" format:@"Could not read the channel \"%@\"", addrs];
+        }else{
+            ch = addri;
+        }
     }
 	
 	tokens = [ url token ];
