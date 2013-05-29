@@ -30,10 +30,14 @@ int main(int argc, const char* argv[])
             ChannelData* data = [ channel popData ];
             NSData *payload = [ data content ];
             
-            NSString *message = [[ NSString alloc ] initWithData:payload encoding:NSUTF8StringEncoding];
-            printf("%s\n", [ message UTF8String ]);
+            if([data isUtf8Content]){
+                NSString *message = [[ NSString alloc ] initWithData:payload encoding:NSUTF8StringEncoding];
+                printf("%s\n", [ message UTF8String ]);
+                [ message release ];
+            }else{
+                printf("%s\n", "binary packet...");
+            }
             
-            [ message release ];
             break;
         } else {
             [ channel checkForChannelError ];

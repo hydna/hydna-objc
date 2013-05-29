@@ -141,10 +141,10 @@ typedef enum {
  *  @param data The data to write to the channel.
  *  @param priority The priority of the data.
  */
-- (void) writeBytes:(NSData*)data priority:(NSUInteger)priority;
+- (void) writeBytes:(NSData*)data priority:(NSUInteger)priority type:(NSUInteger)type;
 
 /**
- *  Calls writeBytes:priority: with a priority of 1.
+ *  Calls writeBytes:priority: with a priority of 0.
  *
  *  @param data The data to write to the channel.
  */
@@ -156,6 +156,13 @@ typedef enum {
  *  @param value The string to be sent.
  */
 - (void) writeString:(NSString*)string;
+
+/**
+ *  Sends string data to the channel with optional priority.
+ *
+ *  @param value The string to be sent.
+ */
+- (void) writeString:(NSString*)string priority:(NSInteger)priority;
 
 /**
  *  Sends data signal to the channel.

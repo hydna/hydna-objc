@@ -208,7 +208,7 @@
     
     [ m_connection allocChannel ];
     
-    if (token || tokens == @"") {
+    if (token || [tokens isEqualToString: @""]) {
         frame = [[ Frame alloc ] initWithChannel:m_ch op:OPEN flag:mode payload:token];
     } else {
         frame = [[ Frame alloc ] initWithChannel:m_ch op:OPEN flag:mode payload:[ tokens dataUsingEncoding:NSUTF8StringEncoding]];
@@ -216,7 +216,7 @@
 
     request = [[ OpenRequest alloc ] initWith:self ch:m_ch frame:frame ];
     
-    if (m_error != @"") {
+    if (![m_error isEqualToString: @""]) {
         [ m_error release ];
     }
     
@@ -230,9 +230,13 @@
     m_openRequest = request;
 }
 
-- (void) writeBytes:(NSData *)data priority:(NSUInteger)priority
+- (void) writeBytes:(NSData *)data priority:(NSUInteger)priority type:(NSUInteger)type
 {
     BOOL result;
+    
+    NSUInteger flag;
+    
+    flag = priority << 1 | type;
     
     [ m_connectMutex lock ];
     if (!m_connected || !m_connection) {
@@ -246,11 +250,11 @@
         [NSException raise:@"Error" format:@"Channel is not writable" ];
     }
     
-    if (priority > 3 || priority == 0) {
-        [NSException raise:@"RangeError" format:@"Priority must be between 1-3" ];
+    if (priority > 3) {
+        [NSException raise:@"RangeError" format:@"Priority must be between 0-3" ];
     }
     
-    Frame* frame = [[ Frame alloc ] initWithChannel:m_ch op:DATA flag:priority payload:data];
+    Frame* frame = [[ Frame alloc ] initWithChannel:m_ch op:DATA flag:flag payload:data];
     
     [ m_connectMutex lock ];
     Connection *connection = m_connection;
@@ -264,12 +268,17 @@
 
 - (void) writeBytes:(NSData *)data
 {
-    [ self writeBytes:data priority:1 ];
+    [ self writeBytes:data priority:0 type: 0];
 }
 
 - (void) writeString:(NSString *)string
 {
-    [ self writeBytes:[string dataUsingEncoding:NSUTF8StringEncoding] ];
+    [ self writeBytes:[string dataUsingEncoding:NSUTF8StringEncoding] priority:0 type:1 ];
+}
+
+- (void) writeString:(NSString *)string priority:(NSInteger)priority
+{
+    [ self writeBytes:[string dataUsingEncoding:NSUTF8StringEncoding] priority:priority type:1 ];
 }
 
 - (void) emitBytes:(NSData *)data
@@ -416,7 +425,7 @@
 - (void) checkForChannelError
 {
     [ m_connectMutex lock ];
-    if (m_error != @"") {
+    if (![m_error isEqualToString: @""]) {
         [ m_connectMutex unlock ];
         [NSException raise:@"ChannelError" format:@"%@", m_error];
     } else {

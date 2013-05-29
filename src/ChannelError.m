@@ -11,7 +11,7 @@
 {
     NSString *msg;
     
-    if (data != @"" || [ data length ] != 0) {
+    if (![data isEqualToString:@""] || [ data length ] != 0) {
         msg = data;
     } else if (flag < 7) {
 		msg = @"Not allowed to open channel";
@@ -24,7 +24,7 @@
 {
     NSString *msg;
     
-    if (data != @"" || [ data length ] != 0) {
+    if (![data isEqualToString: @""] || [ data length ] != 0) {
         msg = data;
     } else if (flag == 0) {
 		msg = @"Bad signal";    

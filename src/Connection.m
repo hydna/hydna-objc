@@ -398,7 +398,7 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
         }
     }
     
-    if (address != @"") {
+    if (![address isEqualToString:@""]) {
         struct sockaddr_in server;
         
         if ((m_connectionFDS = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) == -1) {
