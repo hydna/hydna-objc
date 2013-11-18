@@ -28,6 +28,8 @@ typedef enum {
  */
 @interface Channel : NSObject {
     NSUInteger m_ch;
+    NSString *m_path;
+    NSString *m_token;
 	NSString *m_message;
     
     Connection *m_connection;
@@ -38,12 +40,14 @@ typedef enum {
     BOOL m_readable;
     BOOL m_writable;
     BOOL m_emitable;
+    BOOL m_resolved;
     
     NSString *m_error;
     
     NSUInteger m_mode;
     
     OpenRequest *m_openRequest;
+    OpenRequest *m_resolveRequest;
     
     NSMutableArray *m_dataQueue;
     NSMutableArray *m_signalQueue;
@@ -141,7 +145,7 @@ typedef enum {
  *  @param data The data to write to the channel.
  *  @param priority The priority of the data.
  */
-- (void) writeBytes:(NSData*)data priority:(NSUInteger)priority type:(NSUInteger)type;
+- (void) writeBytes:(NSData*)data priority:(NSUInteger)priority ctype:(NSUInteger)ctype;
 
 /**
  *  Calls writeBytes:priority: with a priority of 0.
@@ -183,6 +187,15 @@ typedef enum {
  */
 - (void) close;
 
+
+/**
+ *  Internal callback for resolve success.
+ *  Used by the Connection class.
+ *
+ *  @param respch The response channel.
+ */
+- (void) resolveSuccess:(NSUInteger)respch path:(NSString*)path token:(NSString*)token;
+
 /**
  *  Internal callback for open success.
  *  Used by the Connection class.
@@ -190,6 +203,8 @@ typedef enum {
  *  @param respch The response channel.
  */
 - (void) openSuccess:(NSUInteger)respch message:(NSString*)message;
+
+
 
 /**
  *  Checks if some error has occured in the channel

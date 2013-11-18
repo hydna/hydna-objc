@@ -21,6 +21,9 @@ extern const unsigned int MAX_REDIRECT_ATTEMPTS;
     NSLock *m_openChannelsMutex;
     NSLock *m_openWaitMutex;
     NSLock *m_pendingMutex;
+    NSLock *m_resolveMutex; // new
+    NSLock *m_resolveWaitMutex; // new
+    NSLock *m_resolveChannelsMutex; // new
     NSLock *m_listeningMutex;
     
     BOOL m_connecting;
@@ -29,6 +32,7 @@ extern const unsigned int MAX_REDIRECT_ATTEMPTS;
     BOOL m_destroying;
     BOOL m_closing;
     BOOL m_listening;
+    BOOL m_resolved; // new
     
     NSString *m_host;
     NSUInteger m_port;
@@ -37,8 +41,10 @@ extern const unsigned int MAX_REDIRECT_ATTEMPTS;
     NSUInteger m_attempt;
 	
     NSMutableDictionary *m_pendingOpenRequests;
+    NSMutableDictionary *m_pendingResolveRequests; // resolve que
     NSMutableDictionary *m_openChannels;
     NSMutableDictionary *m_openWaitQueue;
+    NSMutableDictionary *m_resolveWaitQueue; // resolve que
     
     NSInteger m_channelRefCount;
 }
@@ -95,6 +101,15 @@ extern const unsigned int MAX_REDIRECT_ATTEMPTS;
  *  @param ch The channel to dealloc.
  */
 - (void) deallocChannel:(NSUInteger)ch;
+
+/**
+ *  Request to resolve a channel.
+ *
+ *  @param request The request to resolve the channel.
+ *  @return YES if request went well, else NO.
+ */
+- (BOOL) requestResolve:(OpenRequest*)request;
+
 
 /**
  *  Request to open a channel.

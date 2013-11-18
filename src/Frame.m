@@ -6,11 +6,13 @@
 #import "Frame.h"
 
 // Upper payload limit (10kb)
-const unsigned int PAYLOAD_MAX_LIMIT = 10 * 1024;
+//const unsigned int PAYLOAD_MAX_LIMIT = 10 * 1024;
+const unsigned int PAYLOAD_MAX_LIMIT = 0xFFFFFF - HEADER_SIZE;
+const unsigned int RESOLVE_CHANNEL = 0x0;
 
 @implementation Frame
 
-- (id) initWithChannel:(NSUInteger)ch op:(NSUInteger)op flag:(NSUInteger)flag payload:(NSData*)payload
+- (id) initWithChannel:(NSUInteger)ch ctype:(NSUInteger)ctype op:(NSUInteger)op flag:(NSUInteger)flag payload:(NSData*)payload
 {
     unsigned int length = HEADER_SIZE + [ payload length ];
     
@@ -26,7 +28,11 @@ const unsigned int PAYLOAD_MAX_LIMIT = 10 * 1024;
     
     [ self writeShort:length ];
     [ self writeUnsignedInt:ch ];
-    [ self writeByte:((op & 3) << 3 | (flag & 7))];
+    
+    //writeByte(((ctype << Frame::CTYPE_BITPOS) | (op << Frame::OP_BITPOS) | (flag & 7)));
+    //[ self writeByte:((op & 3) << 3 | (flag & 7))];
+    
+    [ self writeByte:((ctype << CTYPE_BITPOS) | (op << OP_BITPOS) | (flag & 7))];
     
     if (payload) {
         [ self writeBytes: payload ];

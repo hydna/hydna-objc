@@ -52,6 +52,15 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
 - (void) receiveHandler;
 
 /**
+ *  Process a resolve frame.
+ *
+ *  @param ch The channel that should receive the resolve frame.
+ *  @param errcode The error code of the resolve frame.
+ *  @param payload The content of the resolve frame.
+ */
+- (void) processResolveFrameWithChannelId:(NSUInteger)ch errcode:(NSInteger)errcode payload:(NSData*)payload;
+
+/**
  *  Process an open frame.
  *
  *  @param ch The channel that should receive the open frame.
@@ -154,12 +163,17 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
     self->m_pendingMutex = [[ NSLock alloc ] init ];
     self->m_listeningMutex = [[ NSLock alloc ] init ];
     
+    self->m_resolveMutex = [[ NSLock alloc ] init ]; // new
+    self->m_resolveWaitMutex = [[ NSLock alloc ] init ]; // new
+    self->m_resolveChannelsMutex = [[ NSLock alloc ] init ]; // new ?
+    
     self->m_connecting = NO;
     self->m_connected = NO;
     self->m_handshaked = NO;
     self->m_destroying = NO;
     self->m_closing = NO;
     self->m_listening = NO;
+    self->m_resolved = NO;
     
     self->m_host = host;
     self->m_port = port;
@@ -167,8 +181,10 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
 	self->m_attempt = 0;
     
     self->m_pendingOpenRequests = [[ NSMutableDictionary alloc ] init ];
+    self->m_pendingResolveRequests = [[ NSMutableDictionary alloc ] init ];
     self->m_openChannels = [[ NSMutableDictionary alloc ] init ];
     self->m_openWaitQueue = [[ NSMutableDictionary alloc ] init ];
+    self->m_resolveWaitQueue = [[ NSMutableDictionary alloc ] init ];
     
     self->m_channelRefCount = 0;
     
@@ -188,6 +204,12 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
     [ m_pendingOpenRequests release ];
     [ m_openChannels release ];
     [ m_openWaitQueue release ];
+    [ m_pendingResolveRequests release ];
+    [ m_resolveWaitQueue release ];
+    
+    [ m_resolveMutex release ];
+    [ m_resolveWaitMutex release ];
+    [ m_resolveChannelsMutex release ];
     
     [ super dealloc ];
 }
@@ -257,6 +279,69 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
     } else {
         [ m_channelRefMutex unlock ];
     }
+}
+
+- (BOOL) requestResolve:(OpenRequest*)request
+{
+    NSString *path = request.path;
+    
+    NSMutableArray* queue;
+    
+    // TODO add check below for resolvedChannels
+    /*    
+    [ m_openChannelsMutex lock ];
+    if ([ m_openChannels objectForKey:[ NSNumber numberWithInteger:chcomp ]] != nil) {
+        [ m_openChannelsMutex unlock ];
+#ifdef HYDNADEBUG
+		debugPrint(@"Connection", 0, @"The channel was already open, cancel the resolve request");
+#endif
+        [ request release ];
+        return NO;
+    }
+    [ m_openChannelsMutex unlock ];
+    */
+    
+    
+    [ m_resolveMutex lock ];
+    if ([ m_pendingResolveRequests objectForKey:path] != nil) {
+        [ m_resolveMutex unlock ];
+        
+#ifdef HYDNADEBUG
+		debugPrint(@"Connection", 0, @"A open request is waiting to be sent, queue up the new open request");
+#endif
+        [ m_resolveWaitMutex lock ];
+        queue = [ m_resolveWaitQueue objectForKey:path];
+        
+        if (!queue) {
+            queue = [[ NSMutableArray alloc ] init ];
+            [ m_resolveWaitQueue setObject:queue forKey:path];
+        }
+        
+        [ queue addObject:request ];
+        [ m_resolveWaitMutex unlock ];
+    } else if (!m_handshaked) {
+#ifdef HYDNADEBUG
+		debugPrint(@"Connection", 0, @"No connection, queue up the new open request");
+#endif
+        [ m_pendingResolveRequests setObject:request forKey:path];
+        [ m_resolveMutex unlock ];
+        
+        if (!m_connecting) {
+            m_connecting = YES;
+            [ self connectConnectionWithHost:m_host port:m_port auth:m_auth ];
+        }
+    } else {
+		[ m_pendingResolveRequests setObject:request forKey:path ];
+        [ m_resolveMutex unlock ];
+        
+#ifdef HYDNADEBUG
+		debugPrint(@"Connection", 0, @"Already connected, sending the new open request");
+#endif
+        [ self writeBytes:[ request frame ]];
+        [ request setSent:YES ];
+    }
+
+    return m_connected;
 }
 
 - (BOOL) requestOpen:(OpenRequest*)request
@@ -602,8 +687,8 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
 	debugPrint(@"Connection", 0, @"Handshake done on connection");
 #endif
     
-    for (NSString *key in m_pendingOpenRequests) {
-        OpenRequest *request = [ m_pendingOpenRequests objectForKey:key ];
+    for (NSString *key in m_pendingResolveRequests) {
+        OpenRequest *request = [ m_pendingResolveRequests objectForKey:key ];
         [ self writeBytes:[ request frame ]];
         
         if (m_connected) {
@@ -645,6 +730,7 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
     NSUInteger ch;
     NSInteger op;
     NSInteger flag;
+    NSInteger ctype;
     
     char header[headerSize];
     char* payload;
@@ -693,12 +779,23 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
         }
         
         ch = ntohl(*(unsigned int*)&header[2]);
+        
+        /*
         op = header[6] >> 3 & 3;
+        flag = header[6] & 7;*/
+        
+        ctype = header[6] >> CTYPE_BITPOS;
+        op = header[6] >> OP_BITPOS;
         flag = header[6] & 7;
         
         NSData *data = [[ NSData alloc ] initWithBytesNoCopy:payload length:size - headerSize ];
         
         switch (op) {
+            case KEEPALIVE:
+#ifdef HYDNADEBUG
+				debugPrint(@"Connection", ch, @"Received heartbeat");
+#endif
+                break;	
             case OPEN:
 #ifdef HYDNADEBUG
 				debugPrint(@"Connection", ch, @"Received open response");
@@ -719,6 +816,15 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
 #endif
                 [ self processSignalFrameWithChannelId:ch flag:flag payload:data ];
                 break;
+                
+            case RESOLVE:
+#ifdef HYDNADEBUG
+                debugPrint(@"Connection", ch, @"Received resolve");
+#endif
+                //[ self processSignalFrameWithChannelId:ch flag:flag payload:data ];
+                
+                [ self processResolveFrameWithChannelId:ch flag:flag payload:data ];
+                break;
         }
         
         offset = 0;
@@ -728,6 +834,11 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
 	debugPrint(@"Connection", 0, @"Listening thread exited");
 #endif
     [ pool release ];
+}
+
+- (void) processResolveFrameWithChannelId:(NSUInteger)ch errcode:(NSInteger)errcode payload:(NSData*)payload
+{
+    
 }
 
 - (void) processOpenFrameWithChannelId:(NSUInteger)ch errcode:(NSInteger)errcode payload:(NSData*)payload
