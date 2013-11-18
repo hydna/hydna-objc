@@ -823,7 +823,7 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
 #endif
                 //[ self processSignalFrameWithChannelId:ch flag:flag payload:data ];
                 
-                [ self processResolveFrameWithChannelId:ch flag:flag payload:data ];
+                [ self processResolveFrameWithChannelId:ch errcode:flag payload:data ];
                 break;
         }
         
@@ -1060,7 +1060,8 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
         }
 		
 		if (flag != SIG_EMIT && ![ channel isClosing ]) {
-			Frame *frame = [[ Frame alloc ] initWithChannel:ch op:SIGNAL flag:SIG_END payload:payload ];
+            // TODO
+			Frame *frame = [[ Frame alloc ] initWithChannel:ch ctype:0 op:SIGNAL flag:SIG_END payload:payload ];
 			
 			@try {
 				[ self writeBytes:frame ];
