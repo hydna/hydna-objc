@@ -26,8 +26,10 @@
     self->m_readable = NO;
     self->m_writable = NO;
     self->m_emitable = NO;
+    self->m_resolved = NO;
     self->m_error = @"";
     self->m_openRequest = nil;
+    self->m_resolveRequest = nil;
     
     self->m_dataQueue = [[ NSMutableArray alloc ] init ];
     self->m_signalQueue = [[ NSMutableArray alloc ] init ];
@@ -142,13 +144,8 @@
     m_emitable = ((m_mode & EMIT) == EMIT);
     
 	URL* url = [[[ URL alloc ] initWithExpr:expr ] autorelease ];
-    //NSString *tokens = @"";
-	//NSString *chs = @"";
-	//NSUInteger ch = 1;
     
-    //m_path = @"";
-    
-    unichar slash = @"/";
+    unichar slash = '/';
 	
 	if (![[ url protocol ] isEqualToString:@"http" ]) {
 		if ([[ url protocol ] isEqualToString:@"https" ]) {
@@ -167,38 +164,6 @@
     if (m_path.length == 0 || (m_path.length == 1 && [m_path characterAtIndex:0] != slash)) {
         m_path = @"/";
     }
-    
-    /*
-    NSRange range = [chs rangeOfString:@"x"];
-    if (range.length > 0){
-        pos = range.location;
-    }else{
-        pos = -1;
-    }  
-    
-    unsigned int addri;
-    
-    if (pos != -1) {
-        NSString *addrs = [chs substringFromIndex:(pos+1)];
-        
-        BOOL result = [[NSScanner scannerWithString:addrs] scanHexInt:&addri];
-        
-        if (!result) {
-            [NSException raise:@"Error" format:@"Could not read the channel \"%@\"", addrs];
-        }else{
-            ch = addri;
-        }
-
-    }else{
-        NSString *addrs = chs;
-        BOOL result = [[NSScanner scannerWithString:addrs] scanHexInt:&addri];
-        
-        if (!result) {
-            [NSException raise:@"Error" format:@"Could not read the channel \"%@\"", addrs];
-        }else{
-            ch = addri;
-        }
-    }*/
 	
 	m_token = [ url token ];
     m_ch = RESOLVE_CHANNEL;
@@ -208,11 +173,10 @@
     [ m_connection allocChannel ];
     
     if (token || [m_token isEqualToString: @""]) {
-        //m_token = token;
-        frame = [[ Frame alloc ] initWithChannel:m_ch ctype:0 op:OPEN flag:mode payload:token];
-    } else {
-        frame = [[ Frame alloc ] initWithChannel:m_ch ctype:0 op:OPEN flag:mode payload:[ m_token dataUsingEncoding:NSUTF8StringEncoding]];
+        m_token = [[NSString alloc] initWithData:token encoding:NSUTF8StringEncoding];
     }
+    
+    frame = [[ Frame alloc ] initWithChannel:m_ch ctype:CTYPE_UTF8 op:RESOLVE flag:0 payload:[ m_path dataUsingEncoding:NSUTF8StringEncoding]];
 
     request = [[ OpenRequest alloc ] initWith:self ch:m_ch path:m_path token:m_token frame:frame ];
     
@@ -227,22 +191,18 @@
         [NSException raise:@"Error" format:@"Channel already open"];
     }
     
-    m_openRequest = request;
+    m_resolveRequest = request;
 }
 
 - (void) writeBytes:(NSData *)data priority:(NSUInteger)priority ctype:(NSUInteger)ctype
 {
     BOOL result;
     
-    //NSUInteger flag;
-    
-    //flag = priority << 1 | type;
-    
     [ m_connectMutex lock ];
     if (!m_connected || !m_connection) {
         [ m_connectMutex unlock ];
         [ self checkForChannelError ];
-        [NSException raise:@"IOError" format:@"Channel is not conected" ];
+        [NSException raise:@"IOError" format:@"Channel is not connected" ];
     }
     [ m_connectMutex unlock ];
     
@@ -268,17 +228,17 @@
 
 - (void) writeBytes:(NSData *)data
 {
-    [ self writeBytes:data priority:0 ctype: 1];
+    [ self writeBytes:data priority:0 ctype: CTYPE_BINARY];
 }
 
 - (void) writeString:(NSString *)string
 {
-    [ self writeBytes:[string dataUsingEncoding:NSUTF8StringEncoding] priority:0 ctype:0 ];
+    [ self writeBytes:[string dataUsingEncoding:NSUTF8StringEncoding] priority:0 ctype:CTYPE_UTF8 ];
 }
 
 - (void) writeString:(NSString *)string priority:(NSInteger)priority
 {
-    [ self writeBytes:[string dataUsingEncoding:NSUTF8StringEncoding] priority:priority ctype:0 ];
+    [ self writeBytes:[string dataUsingEncoding:NSUTF8StringEncoding] priority:priority ctype:CTYPE_UTF8 ];
 }
 
 - (void) emitBytes:(NSData *)data
@@ -297,6 +257,7 @@
         [NSException raise:@"Error" format:@"You do not have permission to send signals" ];
     }
     
+    // TODO add ctype
     Frame* frame = [[ Frame alloc ] initWithChannel:m_ch ctype:0 op:SIGNAL flag:SIG_EMIT payload:data ];
     
     [ m_connectMutex lock ];
@@ -328,6 +289,8 @@
 	m_readable = NO;
 	m_writable = NO;
 	m_emitable = NO;
+    
+    // TODO add wait for resolve request
     
     if (m_openRequest && [ m_connection cancelOpen:m_openRequest ]) {
 		// Open request hasn't been posted yet, which means that it's
@@ -375,8 +338,8 @@
 - (void) resolveSuccess:(NSUInteger)respch path:(NSString*)path token:(NSString*)token
 {
     
-    if(m_resolved){
-        [NSException raise:@"Error" format:@"Channel is not already resolved"];
+    if(m_resolved == YES){
+        [NSException raise:@"Error" format:@"Channel is already resolved"];
     }
 
     Frame* frame;
@@ -384,20 +347,15 @@
 
     m_ch = respch;
         
-    frame = [[ Frame alloc ] initWithChannel:m_ch ctype:0 op:RESOLVE flag:0 payload:[path dataUsingEncoding:NSUTF8StringEncoding]];
+    frame = [[ Frame alloc ] initWithChannel:m_ch ctype:0 op:OPEN flag:m_mode payload:[path dataUsingEncoding:NSUTF8StringEncoding]];
     
     request = [[ OpenRequest alloc ] initWith:self ch:m_ch path:path token:token frame:frame ];
 
-        /*
-    m_error = ChannelError("", 0x0);
-        */
     if (![m_connection requestOpen:request]) {
-        //checkForChannelError();
-        //throw Error("Channel already open");
-        [NSException raise:@"Error" format:@"Channel already resolved"];
+        [NSException raise:@"Error" format:@"Channel already open"];
     }
 
-    m_resolveRequest = request;
+    m_openRequest = request;
 
     m_resolved = YES;
 }
@@ -477,6 +435,8 @@
 	m_pendingClose = nil;
 	m_closing = NO;
 	m_openRequest = nil;
+    m_resolveRequest = nil;
+    m_resolved = NO;
 	m_connection = nil;
     
     if (connection) {

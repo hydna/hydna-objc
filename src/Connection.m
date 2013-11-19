@@ -76,7 +76,7 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
  *  @param priority The priority of the data.
  *  @param payload The content of the data.
  */
-- (void) processDataFrameWithChannelId:(NSUInteger)ch priority:(NSInteger)priority payload:(NSData *)payload;
+- (void) processDataFrameWithChannelId:(NSUInteger)ch ctype:(NSUInteger)ctype priority:(NSInteger)priority payload:(NSData *)payload;
 
 /**
  *  Process a signal frame.
@@ -86,7 +86,7 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
  *  @param payload The content of the signal.
  *  @return NO is something went wrong.
  */
-- (BOOL) processSignalFrameWithChannel:(Channel *)channel flag:(NSInteger)flag payload:(NSData *)payload;
+- (BOOL) processSignalFrameWithChannel:(Channel *)channel ctype:(NSUInteger)ctype flag:(NSInteger)flag payload:(NSData *)payload;
 
 /**
  *  Process a signal frame.
@@ -95,7 +95,7 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
  *  @param flag The flag of the signal.
  *  @param payload The content of the signal.
  */
-- (void) processSignalFrameWithChannelId:(NSUInteger)ch flag:(NSInteger)flag payload:(NSData *)payload;
+- (void) processSignalFrameWithChannelId:(NSUInteger)ch ctype:(NSUInteger)ctype flag:(NSInteger)flag payload:(NSData *)payload;
 
 /**
  *  Destroy the connection.
@@ -163,9 +163,9 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
     self->m_pendingMutex = [[ NSLock alloc ] init ];
     self->m_listeningMutex = [[ NSLock alloc ] init ];
     
-    self->m_resolveMutex = [[ NSLock alloc ] init ]; // new
-    self->m_resolveWaitMutex = [[ NSLock alloc ] init ]; // new
-    self->m_resolveChannelsMutex = [[ NSLock alloc ] init ]; // new ?
+    self->m_resolveMutex = [[ NSLock alloc ] init ];
+    self->m_resolveWaitMutex = [[ NSLock alloc ] init ];
+    self->m_resolveChannelsMutex = [[ NSLock alloc ] init ];
     
     self->m_connecting = NO;
     self->m_connected = NO;
@@ -301,7 +301,6 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
     [ m_openChannelsMutex unlock ];
     */
     
-    
     [ m_resolveMutex lock ];
     if ([ m_pendingResolveRequests objectForKey:path] != nil) {
         [ m_resolveMutex unlock ];
@@ -337,6 +336,7 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
 #ifdef HYDNADEBUG
 		debugPrint(@"Connection", 0, @"Already connected, sending the new open request");
 #endif
+        
         [ self writeBytes:[ request frame ]];
         [ request setSent:YES ];
     }
@@ -694,7 +694,7 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
         if (m_connected) {
             [ request setSent:YES ];
 #ifdef HYDNADEBUG
-			debugPrint(@"Connection", [ request ch ], @"Open request sent");
+			debugPrint(@"Connection", [ request ch ], @"Resolve request sent");
 #endif
         } else {
             return;
@@ -707,13 +707,7 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
 #endif
     
     [NSThread detachNewThreadSelector:@selector(listen:) toTarget:self withObject:nil];
-    
-    /*
-    if (!created) {
-        [ self destroy:@"Could not create a new thread for frame listening" ];
-        return;
-    }
-    */
+
 }
 
 - (void) listen:(id)param
@@ -780,10 +774,6 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
         
         ch = ntohl(*(unsigned int*)&header[2]);
         
-        /*
-        op = header[6] >> 3 & 3;
-        flag = header[6] & 7;*/
-        
         ctype = header[6] >> CTYPE_BITPOS;
         op = header[6] >> OP_BITPOS;
         flag = header[6] & 7;
@@ -807,22 +797,20 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
 #ifdef HYDNADEBUG
 				debugPrint(@"Connection", ch, @"Received data");
 #endif
-                [ self processDataFrameWithChannelId:ch priority:flag payload:data ];
+                [ self processDataFrameWithChannelId:ch ctype:ctype priority:flag payload:data ];
                 break;
                 
             case SIGNAL:
 #ifdef HYDNADEBUG
 				debugPrint(@"Connection", ch, @"Received signal");
 #endif
-                [ self processSignalFrameWithChannelId:ch flag:flag payload:data ];
+                [ self processSignalFrameWithChannelId:ch ctype:ctype flag:flag payload:data ];
                 break;
                 
             case RESOLVE:
 #ifdef HYDNADEBUG
                 debugPrint(@"Connection", ch, @"Received resolve");
-#endif
-                //[ self processSignalFrameWithChannelId:ch flag:flag payload:data ];
-                
+#endif          
                 [ self processResolveFrameWithChannelId:ch errcode:flag payload:data ];
                 break;
         }
@@ -839,6 +827,34 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
 - (void) processResolveFrameWithChannelId:(NSUInteger)ch errcode:(NSInteger)errcode payload:(NSData*)payload
 {
     
+    if (errcode != 0) {
+        [ self destroy:@"The server sent an invalid resolve frame" ];
+        return;
+    }
+    
+    NSString *path = @"";
+    
+    if (payload && [ payload length ] > 0) {
+        path = [[NSString alloc] initWithData:payload encoding:NSUTF8StringEncoding];
+    }
+    
+    OpenRequest *request = nil;
+    Channel* channel;
+    
+    [ m_resolveMutex lock ];
+    
+    request = [ m_pendingResolveRequests objectForKey:path];
+    
+    [ m_resolveMutex unlock ];
+    
+    if (!request) {
+        [ self destroy:@"The server sent an invalid resolve frame" ];
+        return;
+    }
+    
+    channel = [request channel];
+    
+    [channel resolveSuccess:ch path:path token:[request token]];
 }
 
 - (void) processOpenFrameWithChannelId:(NSUInteger)ch errcode:(NSInteger)errcode payload:(NSData*)payload
@@ -927,7 +943,7 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
     [ m_pendingMutex lock ];
     NSMutableArray *queue = [ m_openWaitQueue objectForKey:[ NSNumber numberWithInteger:ch ]];
     if (queue != nil) {
-        // Destroy all pending request IF response wans't a redirect channel.
+        // Destroy all pending request IF response wasn't a redirect channel.
         if (respch == ch) {
             [[ m_pendingOpenRequests objectForKey:[ NSNumber numberWithInteger:ch ]] release ];
             [ m_pendingOpenRequests removeObjectForKey:[ NSNumber numberWithInteger:ch ]];
@@ -961,8 +977,9 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
     [ m_openWaitMutex unlock ];
 }
 
-- (void) processDataFrameWithChannelId:(NSUInteger)ch priority:(NSInteger)priority payload:(NSData*)payload
+- (void) processDataFrameWithChannelId:(NSUInteger)ch ctype:(NSUInteger)ctype priority:(NSInteger)priority payload:(NSData*)payload
 {
+    
     [ m_openChannelsMutex lock ];
     Channel *channel = [ m_openChannels objectForKey:[ NSNumber numberWithInteger:ch ]];
     [ m_openChannelsMutex unlock ];
@@ -978,11 +995,11 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
         return;
     }
     
-    data = [[ ChannelData alloc ] initWithPriority:priority content:payload ];
+    data = [[ ChannelData alloc ] initWithPriority:priority content:payload ctype:ctype];
     [ channel addData:data ];
 }
 
-- (BOOL) processSignalFrameWithChannel:(Channel*)channel flag:(NSInteger)flag payload:(NSData*)payload
+- (BOOL) processSignalFrameWithChannel:(Channel*)channel ctype:(NSUInteger)ctype flag:(NSInteger)flag payload:(NSData*)payload
 {
     ChannelSignal *signal;
     
@@ -1004,13 +1021,13 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
     if (!channel) {
         return NO;
     }
-    
+    // TODO add ctype to signal
     signal = [[ ChannelSignal alloc ] initWithType:flag content:payload];
     [ channel addSignal:signal ];
     return YES;
 }
 
-- (void) processSignalFrameWithChannelId:(NSUInteger)ch flag:(NSInteger)flag payload:(NSData*)payload
+- (void) processSignalFrameWithChannelId:(NSUInteger)ch ctype:(NSUInteger)ctype flag:(NSInteger)flag payload:(NSData*)payload
 {
     if (ch == 0) {
         BOOL destroying = NO;
@@ -1036,7 +1053,7 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
                 [ m_closingMutex unlock ];
             }
             
-            if (![ self processSignalFrameWithChannel:channel flag:flag payload:payloadCopy ]) {
+            if (![ self processSignalFrameWithChannel:channel ctype:ctype flag:flag payload:payloadCopy ]) {
                 [ m_openChannels removeObjectForKey:key ];
             }
         }
@@ -1060,7 +1077,7 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
         }
 		
 		if (flag != SIG_EMIT && ![ channel isClosing ]) {
-            // TODO
+            // TODO ctype
 			Frame *frame = [[ Frame alloc ] initWithChannel:ch ctype:0 op:SIGNAL flag:SIG_END payload:payload ];
 			
 			@try {
@@ -1074,7 +1091,7 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
 			return;
 		}
 		
-        [ self processSignalFrameWithChannel:channel flag:flag payload:payload ];
+        [ self processSignalFrameWithChannel:channel ctype:ctype flag:flag payload:payload ];
     }
 
 }

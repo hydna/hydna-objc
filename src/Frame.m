@@ -14,7 +14,7 @@ const unsigned int RESOLVE_CHANNEL = 0x0;
 
 - (id) initWithChannel:(NSUInteger)ch ctype:(NSUInteger)ctype op:(NSUInteger)op flag:(NSUInteger)flag payload:(NSData*)payload
 {
-    unsigned int length = HEADER_SIZE + [ payload length ];
+    unsigned int length = HEADER_SIZE + (unsigned int)[ payload length ];
     
     if ([ payload length ] > PAYLOAD_MAX_LIMIT) {
         [NSException raise:@"RangeError" format:@"Payload max limit reached"];
@@ -27,10 +27,7 @@ const unsigned int RESOLVE_CHANNEL = 0x0;
     self->m_bytes = [[NSMutableData alloc] initWithCapacity:length];
     
     [ self writeShort:length ];
-    [ self writeUnsignedInt:ch ];
-    
-    //writeByte(((ctype << Frame::CTYPE_BITPOS) | (op << Frame::OP_BITPOS) | (flag & 7)));
-    //[ self writeByte:((op & 3) << 3 | (flag & 7))];
+    [ self writeUnsignedInt:(unsigned int)ch ];
     
     [ self writeByte:((ctype << CTYPE_BITPOS) | (op << OP_BITPOS) | (flag & 7))];
     
@@ -71,7 +68,7 @@ const unsigned int RESOLVE_CHANNEL = 0x0;
 
 - (int) size
 {
-    return [ m_bytes length ];
+    return (unsigned int)[ m_bytes length ];
 }
 
 - (const char*) data

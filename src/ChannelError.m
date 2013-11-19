@@ -9,7 +9,7 @@
 
 + (NSString*) fromOpenError:(NSInteger)flag data:(NSString*)data
 {
-    NSString *msg;
+    NSString *msg = @"";
     
     if (![data isEqualToString:@""] || [ data length ] != 0) {
         msg = data;
@@ -22,7 +22,7 @@
     
 + (NSString*) fromSigError:(NSInteger)flag data:(NSString*)data
 {
-    NSString *msg;
+    NSString *msg = @"";
     
     if (![data isEqualToString: @""] || [ data length ] != 0) {
         msg = data;

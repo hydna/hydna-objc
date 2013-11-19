@@ -42,6 +42,11 @@ enum {
     CTYPE_BITMASK = (0x01 << CTYPE_BITPOS)  
 };
 
+enum {
+    CTYPE_UTF8 = 0x0,
+    CTYPE_BINARY = 0x1
+};
+
 // Upper payload limit (10kb)
 extern const unsigned int PAYLOAD_MAX_LIMIT;
 extern const unsigned int RESOLVE_CHANNEL;

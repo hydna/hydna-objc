@@ -8,14 +8,14 @@
 
 @implementation ChannelData
 
-- (id) initWithPriority:(NSInteger)priority content:(NSData*)content
+- (id) initWithPriority:(NSInteger)priority content:(NSData*)content ctype:(NSUInteger)ctype
 {
     if (!(self = [super init])) {
         return nil;
     }
     
-    self->m_priority = (priority >> 1);
-    self->m_binary = (priority & 1) == 1 ? NO : YES;
+    self->m_priority = priority;
+    self->m_binary = (ctype == CTYPE_UTF8) ? NO : YES;
     self->m_content = content;
     
     return self;

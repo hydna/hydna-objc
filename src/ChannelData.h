@@ -4,6 +4,7 @@
 //
 
 #import <Cocoa/Cocoa.h>
+#import "Frame.h"
 
 
 @interface ChannelData : NSObject {
@@ -12,7 +13,7 @@
     BOOL m_binary;
 }
 
-- (id) initWithPriority:(NSInteger)priority content:(NSData *)content;
+- (id) initWithPriority:(NSInteger)priority content:(NSData *)content ctype:(NSUInteger)ctype;
 - (BOOL) isBinaryContent;
 - (BOOL) isUtf8Content;
 
