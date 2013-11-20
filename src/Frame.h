@@ -6,7 +6,8 @@
 #import <Cocoa/Cocoa.h>
 
 enum {
-    HEADER_SIZE = 0x07
+    HEADER_SIZE = 0x05,
+    LENGTH_OFFSET = 2
 };
 
 enum {    

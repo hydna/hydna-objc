@@ -734,8 +734,8 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
     [ m_listeningMutex unlock ];
     
     for (;;) {
-        while (offset < headerSize && n > 0) {
-            n = read(m_connectionFDS, header + offset, headerSize - offset);
+        while (offset < headerSize + LENGTH_OFFSET && n > 0) {
+            n = read(m_connectionFDS, header + offset, headerSize + LENGTH_OFFSET - offset);
             offset += n;
         }
         
@@ -753,8 +753,8 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
         size = ntohs(*(unsigned short*)&header[0]);
         payload = malloc((size - headerSize) * sizeof(char));
 		
-        while (offset < size && n > 0) {
-            n = read(m_connectionFDS, payload + offset - headerSize, size - offset);
+        while (offset < size + LENGTH_OFFSET && n > 0) {
+            n = read(m_connectionFDS, payload + offset - (headerSize + LENGTH_OFFSET), (size + LENGTH_OFFSET) - offset);
             offset += n;
         }
         
@@ -772,10 +772,10 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
         ch = ntohl(*(unsigned int*)&header[2]);
         
         ctype = header[6] >> CTYPE_BITPOS;
-        //op = header[6] >> OP_BITPOS;
-        //op = TAKE_N_BITS_FROM(header[6], 3, 3);
         op = (header[6] >> OP_BITPOS) & OP_BITMASK;
         flag = header[6] & 7;
+        
+        NSLog(@"received data %u", op);
         
         NSData *data = [[ NSData alloc ] initWithBytesNoCopy:payload length:size - headerSize ];
         

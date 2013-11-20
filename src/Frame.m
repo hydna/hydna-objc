@@ -24,7 +24,7 @@ const unsigned int RESOLVE_CHANNEL = 0x0;
         return nil;
     }
     
-    self->m_bytes = [[NSMutableData alloc] initWithCapacity:length];
+    self->m_bytes = [[NSMutableData alloc] initWithCapacity:(length+LENGTH_OFFSET)];
     
     [ self writeShort:length ];
     [ self writeUnsignedInt:(unsigned int)ch ];
