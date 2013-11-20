@@ -302,7 +302,7 @@
 		return;
 	}
 	
-	frame = [[ Frame alloc ] initWithChannel:m_ch ctype:0 op:SIGNAL flag:SIG_END payload:nil ];
+	frame = [[ Frame alloc ] initWithChannel:m_ch ctype:CTYPE_UTF8 op:SIGNAL flag:SIG_END payload:nil ];
 	
 	if (m_openRequest) {
 		// Open request is not responded to yet. Wait to send ENDSIG until
