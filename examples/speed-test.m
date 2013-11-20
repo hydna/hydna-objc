@@ -35,7 +35,7 @@ int main(int argc, const char* argv[])
     
     @try {
         Channel *channel = [[ Channel alloc ] init ];
-        [ channel connect:@"public.hydna.net/hellospeed" mode:READWRITE token:nil ];
+        [ channel connect:@"public.hydna.net/speed" mode:READWRITE token:nil ];
         
         while (![ channel isConnected ]) {
             [ channel checkForChannelError ];
