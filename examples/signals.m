@@ -11,7 +11,7 @@ int main(int argc, const char* argv[])
     NSAutoreleasePool *pool = [[ NSAutoreleasePool alloc ] init ];
     
     Channel *channel = [[ Channel alloc ] init ];
-    [ channel connect:@"public.hydna.net/1" mode:READWRITEEMIT token:nil ];
+    [ channel connect:@"public.hydna.net/hello" mode:READWRITEEMIT token:nil ];
     
     while (![ channel isConnected ]) {
         [ channel checkForChannelError ];

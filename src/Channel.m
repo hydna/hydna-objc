@@ -129,7 +129,7 @@
     }
     [ m_connectMutex unlock ];
     
-    if (mode == 0x04 || mode < READ || mode > READWRITEEMIT) {
+    if (mode < LISTEN || mode > READWRITEEMIT) {
         [NSException raise:@"Error" format:@"Invalid channel mode"];
     }
     
