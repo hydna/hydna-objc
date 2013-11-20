@@ -8,6 +8,8 @@
 #import "OpenRequest.h"
 #import "Frame.h"
 
+#define TAKE_N_BITS_FROM(b, p, n) ((b) >> (p)) & ((1 << (n)) - 1);
+
 extern const unsigned int MAX_REDIRECT_ATTEMPTS;
 
 /**

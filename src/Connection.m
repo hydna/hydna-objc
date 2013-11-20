@@ -772,7 +772,9 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
         ch = ntohl(*(unsigned int*)&header[2]);
         
         ctype = header[6] >> CTYPE_BITPOS;
-        op = header[6] >> OP_BITPOS;
+        //op = header[6] >> OP_BITPOS;
+        //op = TAKE_N_BITS_FROM(header[6], 3, 3);
+        op = (header[6] >> OP_BITPOS) & OP_BITMASK;
         flag = header[6] & 7;
         
         NSData *data = [[ NSData alloc ] initWithBytesNoCopy:payload length:size - headerSize ];

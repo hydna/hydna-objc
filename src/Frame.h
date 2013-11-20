@@ -37,7 +37,7 @@ enum {
     // Bitmasks
     FLAG_BITMASK = 0x7,
     OP_BITPOS = 3,
-    OP_BITMASK = (0x07 << OP_BITPOS),
+    OP_BITMASK = ((1 << 3) - 1),
     CTYPE_BITPOS = 6,
     CTYPE_BITMASK = (0x01 << CTYPE_BITPOS)  
 };
