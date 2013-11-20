@@ -226,9 +226,9 @@
     }
 }
 
-- (void) writeBytes:(NSData *)data
+- (void) writeBytes:(NSData *)data ctype:(NSUInteger)ctype
 {
-    [ self writeBytes:data priority:0 ctype: CTYPE_BINARY];
+    [ self writeBytes:data priority:0 ctype:ctype ];
 }
 
 - (void) writeString:(NSString *)string
@@ -241,7 +241,7 @@
     [ self writeBytes:[string dataUsingEncoding:NSUTF8StringEncoding] priority:priority ctype:CTYPE_UTF8 ];
 }
 
-- (void) emitBytes:(NSData *)data
+- (void) emitBytes:(NSData *)data ctype:(NSUInteger)ctype
 {
     BOOL result;
     
@@ -257,8 +257,7 @@
         [NSException raise:@"Error" format:@"You do not have permission to send signals" ];
     }
     
-    // TODO add ctype
-    Frame* frame = [[ Frame alloc ] initWithChannel:m_ch ctype:0 op:SIGNAL flag:SIG_EMIT payload:data ];
+    Frame* frame = [[ Frame alloc ] initWithChannel:m_ch ctype:ctype op:SIGNAL flag:SIG_EMIT payload:data ];
     
     [ m_connectMutex lock ];
     Connection *connection = m_connection;
@@ -272,7 +271,7 @@
 
 - (void) emitString:(NSString *)string
 {
-    [ self emitBytes:[string dataUsingEncoding:NSUTF8StringEncoding] ];
+    [ self emitBytes:[string dataUsingEncoding:NSUTF8StringEncoding] ctype:CTYPE_UTF8 ];
 }
 
 - (void) close
@@ -347,7 +346,7 @@
 
     m_ch = respch;
         
-    frame = [[ Frame alloc ] initWithChannel:m_ch ctype:0 op:OPEN flag:m_mode payload:[path dataUsingEncoding:NSUTF8StringEncoding]];
+    frame = [[ Frame alloc ] initWithChannel:m_ch ctype:0 op:OPEN flag:m_mode payload:[token dataUsingEncoding:NSUTF8StringEncoding]];
     
     request = [[ OpenRequest alloc ] initWith:self ch:m_ch path:path token:token frame:frame ];
 

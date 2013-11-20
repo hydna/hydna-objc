@@ -287,19 +287,13 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
     
     NSMutableArray* queue;
     
-    // TODO add check below for resolvedChannels
-    /*    
-    [ m_openChannelsMutex lock ];
-    if ([ m_openChannels objectForKey:[ NSNumber numberWithInteger:chcomp ]] != nil) {
-        [ m_openChannelsMutex unlock ];
+    if (m_resolved) {
 #ifdef HYDNADEBUG
-		debugPrint(@"Connection", 0, @"The channel was already open, cancel the resolve request");
+		debugPrint(@"Connection", 0, @"The channel was already resolved, cancel the resolve request");
 #endif
         [ request release ];
         return NO;
     }
-    [ m_openChannelsMutex unlock ];
-    */
     
     [ m_resolveMutex lock ];
     if ([ m_pendingResolveRequests objectForKey:path] != nil) {
@@ -405,6 +399,9 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
 
     return m_connected;
 }
+
+
+// TODO add cancel resolve
 
 - (BOOL) cancelOpen:(OpenRequest*)request
 {
@@ -1021,8 +1018,8 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
     if (!channel) {
         return NO;
     }
-    // TODO add ctype to signal
-    signal = [[ ChannelSignal alloc ] initWithType:flag content:payload];
+    
+    signal = [[ ChannelSignal alloc ] initWithType:flag ctype:ctype content:payload];
     [ channel addSignal:signal ];
     return YES;
 }
@@ -1077,8 +1074,8 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
         }
 		
 		if (flag != SIG_EMIT && ![ channel isClosing ]) {
-            // TODO ctype
-			Frame *frame = [[ Frame alloc ] initWithChannel:ch ctype:0 op:SIGNAL flag:SIG_END payload:payload ];
+            
+			Frame *frame = [[ Frame alloc ] initWithChannel:ch ctype:ctype op:SIGNAL flag:SIG_END payload:payload ];
 			
 			@try {
 				[ self writeBytes:frame ];
@@ -1184,6 +1181,9 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
 
 - (BOOL) writeBytes:(Frame*)frame
 {
+    
+    // TODO, add reset of hearbeat timeout
+    
     if (m_handshaked) {
         NSInteger n = -1;
         NSInteger size = [ frame size ];

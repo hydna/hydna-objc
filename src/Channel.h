@@ -152,7 +152,7 @@ typedef enum {
  *
  *  @param data The data to write to the channel.
  */
-- (void) writeBytes:(NSData*)data;
+- (void) writeBytes:(NSData*)data ctype:(NSUInteger)ctype;
 
 /**
  *  Sends string data to the channel.
@@ -172,8 +172,9 @@ typedef enum {
  *  Sends data signal to the channel.
  *
  *  @param data The data to write to the channel.
+ *  @param ctype The data type to write to the channel.
  */
-- (void) emitBytes:(NSData*)data;
+- (void) emitBytes:(NSData*)data ctype:(NSUInteger)ctype;
 
 /**
  *  Sends a string signal to the channel.
