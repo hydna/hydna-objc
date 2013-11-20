@@ -5,7 +5,7 @@
 
 #import "Frame.h"
 
-const unsigned int PAYLOAD_MAX_LIMIT = 0xFFFA - HEADER_SIZE;
+const unsigned int PAYLOAD_MAX_LIMIT = 0xFFFF - HEADER_SIZE;
 const unsigned int RESOLVE_CHANNEL = 0x0;
 
 @implementation Frame
