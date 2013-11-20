@@ -5,9 +5,7 @@
 
 #import "Frame.h"
 
-// Upper payload limit (10kb)
-//const unsigned int PAYLOAD_MAX_LIMIT = 10 * 1024;
-const unsigned int PAYLOAD_MAX_LIMIT = 0xFFFFFF - HEADER_SIZE;
+const unsigned int PAYLOAD_MAX_LIMIT = 0xFFFA - HEADER_SIZE;
 const unsigned int RESOLVE_CHANNEL = 0x0;
 
 @implementation Frame
