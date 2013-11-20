@@ -775,8 +775,6 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
         op = (header[6] >> OP_BITPOS) & OP_BITMASK;
         flag = header[6] & 7;
         
-        NSLog(@"received data %u", op);
-        
         NSData *data = [[ NSData alloc ] initWithBytesNoCopy:payload length:size - headerSize ];
         
         switch (op) {
