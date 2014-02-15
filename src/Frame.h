@@ -12,7 +12,7 @@ enum {
 
 enum {    
     // Opcodes
-	NOOP   = 0x00,
+    NOOP   = 0x00,
     KEEPALIVE = 0x00,
     OPEN   = 0x01,
     DATA   = 0x02,

@@ -19,7 +19,7 @@
     }
     
     self->m_ch = 0;
-	self->m_message = @"";
+    self->m_message = @"";
     self->m_connection = nil;
     self->m_connected = NO;
     self->m_pendingClose = NO;
@@ -42,7 +42,7 @@
 
 - (void) dealloc
 {
-	[ m_message release ];
+    [ m_message release ];
     [ m_dataQueue release ];
     [ m_dataMutex release ];
     [ m_signalQueue release ];
@@ -53,12 +53,12 @@
 
 - (BOOL) getFollowRedirects
 {
-	return [ Connection getFollowRedirects ];
+    return [ Connection getFollowRedirects ];
 }
 
 - (void) setFollowRedirects:(BOOL)value
 {
-	[ Connection setFollowRedirects:value ];
+    [ Connection setFollowRedirects:value ];
 }
 
 - (BOOL) isConnected
@@ -114,7 +114,7 @@
     [ m_connectMutex lock ];
     NSString *result = [ NSString stringWithString:m_message ];
     [ m_connectMutex unlock ];
-    return result;	
+    return result;    
 }
 
 - (void) connect:(NSString *)expr mode:(NSUInteger)mode token:(NSData *)token
@@ -143,29 +143,29 @@
     m_writable = ((m_mode & WRITE) == WRITE);
     m_emitable = ((m_mode & EMIT) == EMIT);
     
-	URL* url = [[[ URL alloc ] initWithExpr:expr ] autorelease ];
+    URL* url = [[[ URL alloc ] initWithExpr:expr ] autorelease ];
     
     unichar slash = '/';
-	
-	if (![[ url protocol ] isEqualToString:@"http" ]) {
-		if ([[ url protocol ] isEqualToString:@"https" ]) {
-			[NSException raise:@"Error" format:@"The protocol HTTPS is not supported"];
-		} else {
-			[NSException raise:@"Error" format:@"Unknown protocol, \"%@\"", [ url protocol ]];
-		}
-	}
-	
+    
+    if (![[ url protocol ] isEqualToString:@"http" ]) {
+        if ([[ url protocol ] isEqualToString:@"https" ]) {
+            [NSException raise:@"Error" format:@"The protocol HTTPS is not supported"];
+        } else {
+            [NSException raise:@"Error" format:@"Unknown protocol, \"%@\"", [ url protocol ]];
+        }
+    }
+    
     if (![[ url error ] isEqualToString:@"" ]) {
         [NSException raise:@"Error" format:@"%@", [ url error ]];
     }
-	
-	m_path = [NSString stringWithFormat:@"%@%@", @"/", [url path]];
+    
+    m_path = [NSString stringWithFormat:@"%@%@", @"/", [url path]];
     
     if (m_path.length == 0 || (m_path.length == 1 && [m_path characterAtIndex:0] != slash)) {
         m_path = @"/";
     }
-	
-	m_token = [ url token ];
+    
+    m_token = [ url token ];
     m_ch = RESOLVE_CHANNEL;
     
     m_connection = [Connection getConnectionWithHost:[ url host ] port:[ url port ] auth:[ url auth ]];
@@ -276,61 +276,60 @@
 
 - (void) close
 {
-	Frame *frame;
-	
+    Frame *frame;
+    
     [ m_connectMutex lock ];
     if (!m_connection || m_closing) {
         [ m_connectMutex unlock ];
         return;
     }
-	
-	m_closing = YES;
-	m_readable = NO;
-	m_writable = NO;
-	m_emitable = NO;
+    
+    m_closing = YES;
+    m_readable = NO;
+    m_writable = NO;
+    m_emitable = NO;
     
     // TODO add wait for resolve request
     
     if (m_openRequest && [ m_connection cancelOpen:m_openRequest ]) {
-		// Open request hasn't been posted yet, which means that it's
-		// safe to destroy channel immediately.
-
-		m_openRequest = nil;
-		[ m_connectMutex unlock ];
-		
-		[ self destroy:@"" ];
-		return;
-	}
-	
-	frame = [[ Frame alloc ] initWithChannel:m_ch ctype:CTYPE_UTF8 op:SIGNAL flag:SIG_END payload:nil ];
-	
-	if (m_openRequest) {
-		// Open request is not responded to yet. Wait to send ENDSIG until
-		// we get an OPENRESP.
-		
-		m_pendingClose = frame;
-		[ m_connectMutex unlock ];
-	} else {
-		[ m_connectMutex unlock ];
-		
-		
-		@try {
+        // Open request hasn't been posted yet, which means that it's
+        // safe to destroy channel immediately.
+        m_openRequest = nil;
+        [ m_connectMutex unlock ];
+        
+        [ self destroy:@"" ];
+        return;
+    }
+    
+    frame = [[ Frame alloc ] initWithChannel:m_ch ctype:CTYPE_UTF8 op:SIGNAL flag:SIG_END payload:nil ];
+    
+    if (m_openRequest) {
+        // Open request is not responded to yet. Wait to send ENDSIG until
+        // we get an OPENRESP.
+        
+        m_pendingClose = frame;
+        [ m_connectMutex unlock ];
+    } else {
+        [ m_connectMutex unlock ];
+        
+        
+        @try {
 #ifdef HYDNADEBUG
-			debugPrint(@"Connection", m_ch, @"Sending close signal");
+            debugPrint(@"Connection", m_ch, @"Sending close signal");
 #endif
-			
-			[ m_connectMutex lock ];
-			Connection *connection = m_connection;
-			[ m_connectMutex unlock ];
-			
-			[ connection writeBytes:frame ];
-			[ frame release ];
-		}
-		@catch (NSException *e) {
-			[ m_connectMutex unlock ];
-			[ frame release ];
-			[ self destroy: [ e reason ] ];
-		}
+            
+            [ m_connectMutex lock ];
+            Connection *connection = m_connection;
+            [ m_connectMutex unlock ];
+            
+            [ connection writeBytes:frame ];
+            [ frame release ];
+        }
+        @catch (NSException *e) {
+            [ m_connectMutex unlock ];
+            [ frame release ];
+            [ self destroy: [ e reason ] ];
+        }
     }
 }
 
@@ -362,47 +361,47 @@
 - (void) openSuccess:(NSUInteger)respch message:(NSString*)message
 {
     [ m_connectMutex lock ];
-	NSUInteger origch = m_ch;
-	Frame *frame;
-	
-	m_openRequest = nil;
+    NSUInteger origch = m_ch;
+    Frame *frame;
+    
+    m_openRequest = nil;
     m_ch = respch;
     m_connected = YES;
-	m_message = message;
+    m_message = message;
     
     if (m_pendingClose) {
-		frame = m_pendingClose;
-		m_pendingClose = nil;
-		
+        frame = m_pendingClose;
+        m_pendingClose = nil;
+        
         [ m_connectMutex unlock ];
         
-		if (origch != respch) {
-			// channel is changed. We need to change the channel of the
-			//frame before sending to serv
-			
-			[ frame setChannel:respch ];
-		}
-		
-		@try {
+        if (origch != respch) {
+            // channel is changed. We need to change the channel of the
+            //frame before sending to serv
+            
+            [ frame setChannel:respch ];
+        }
+        
+        @try {
 #ifdef HYDNADEBUG
-			debugPrint(@"Connection", m_ch, @"Sending close signal");
+            debugPrint(@"Connection", m_ch, @"Sending close signal");
 #endif
-			
-			[ m_connectMutex lock ];
-			Connection *connection = m_connection;
-			[ m_connectMutex unlock ];
-			
-			[ connection writeBytes:frame ];
-			[ frame release ];
-		}
-		@catch (NSException *e) {
-			// Something wen't terrible wrong. Queue frame and wait
-			// for a reconnect.
-			
-			[ m_connectMutex unlock ];
-			[ frame release ];
-			[ self destroy: [ e reason ] ];
-		}
+            
+            [ m_connectMutex lock ];
+            Connection *connection = m_connection;
+            [ m_connectMutex unlock ];
+            
+            [ connection writeBytes:frame ];
+            [ frame release ];
+        }
+        @catch (NSException *e) {
+            // Something wen't terrible wrong. Queue frame and wait
+            // for a reconnect.
+            
+            [ m_connectMutex unlock ];
+            [ frame release ];
+            [ self destroy: [ e reason ] ];
+        }
     } else {
         [ m_connectMutex unlock ];
     }
@@ -423,20 +422,20 @@
 - (void) destroy:(NSString*)error
 {
     [ m_connectMutex lock ];
-	Connection *connection = m_connection;
-	BOOL connected = m_connected;
-	NSUInteger ch = m_ch;
+    Connection *connection = m_connection;
+    BOOL connected = m_connected;
+    NSUInteger ch = m_ch;
     
-	m_ch = 0;
-	m_connected = NO;
+    m_ch = 0;
+    m_connected = NO;
     m_writable = NO;
     m_readable = NO;
-	m_pendingClose = nil;
-	m_closing = NO;
-	m_openRequest = nil;
+    m_pendingClose = nil;
+    m_closing = NO;
+    m_openRequest = nil;
     m_resolveRequest = nil;
     m_resolved = NO;
-	m_connection = nil;
+    m_connection = nil;
     
     if (connection) {
         [ connection deallocChannel:connected ? ch : 0 ];

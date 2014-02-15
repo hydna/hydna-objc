@@ -38,10 +38,10 @@ extern const unsigned int MAX_REDIRECT_ATTEMPTS;
     
     NSString *m_host;
     NSUInteger m_port;
-	NSString *m_auth;
+    NSString *m_auth;
     NSInteger m_connectionFDS;
     NSUInteger m_attempt;
-	
+    
     NSMutableDictionary *m_pendingOpenRequests;
     NSMutableDictionary *m_pendingResolveRequests; // resolve que
     NSMutableDictionary *m_openChannels;

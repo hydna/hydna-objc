@@ -1,6 +1,6 @@
 //
-//	URL.h
-//	hydna-objc
+//    URL.h
+//    hydna-objc
 //
 
 #import <Cocoa/Cocoa.h>
@@ -8,12 +8,12 @@
 
 @interface URL : NSObject {
     NSUInteger m_port;
-	NSString *m_path;
-	NSString *m_host;
-	NSString *m_token;
-	NSString *m_auth;
-	NSString *m_protocol;
-	NSString *m_error;
+    NSString *m_path;
+    NSString *m_host;
+    NSString *m_token;
+    NSString *m_auth;
+    NSString *m_protocol;
+    NSString *m_error;
 }
 
 - (id) initWithExpr:(NSString*)expr;

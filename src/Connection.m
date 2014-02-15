@@ -141,12 +141,12 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
 
 + (BOOL) getFollowRedirects
 {
-	return m_followRedirects;
+    return m_followRedirects;
 }
 
 + (void) setFollowRedirects:(BOOL)value
 {
-	m_followRedirects = value;
+    m_followRedirects = value;
 }
 
 - (id) initWithHost:(NSString*)host port:(NSUInteger)port auth:(NSString*)auth
@@ -177,8 +177,8 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
     
     self->m_host = host;
     self->m_port = port;
-	self->m_auth = auth;
-	self->m_attempt = 0;
+    self->m_auth = auth;
+    self->m_attempt = 0;
     
     self->m_pendingOpenRequests = [[ NSMutableDictionary alloc ] init ];
     self->m_pendingResolveRequests = [[ NSMutableDictionary alloc ] init ];
@@ -225,14 +225,14 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
     ++m_channelRefCount;
     [ m_channelRefMutex unlock ];
 #ifdef HYDNADEBUG
-	debugPrint(@"Connection", 0, [NSString stringWithFormat:@"Allocating a new channel, channel ref count is %i", m_channelRefCount]);
+    debugPrint(@"Connection", 0, [NSString stringWithFormat:@"Allocating a new channel, channel ref count is %i", m_channelRefCount]);
 #endif
 }
 
 - (void) deallocChannel:(NSUInteger)ch;
 {
 #ifdef HYDNADEBUG
-	debugPrint(@"Connection", ch, @"Deallocating a channel");
+    debugPrint(@"Connection", ch, @"Deallocating a channel");
 #endif
     [ m_destroyingMutex lock ];
     [ m_closingMutex lock ];
@@ -243,7 +243,7 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
         [ m_openChannelsMutex lock ];
         [ m_openChannels removeObjectForKey:[ NSNumber numberWithInteger:ch ] ];
 #ifdef HYDNADEBUG
-		debugPrint(@"Connection", ch, [NSString stringWithFormat:@"Size of openChannels is now %i", [ m_openChannels count ]]);
+        debugPrint(@"Connection", ch, [NSString stringWithFormat:@"Size of openChannels is now %i", [ m_openChannels count ]]);
 #endif
         [ m_openChannelsMutex unlock ];
     } else {
@@ -264,7 +264,7 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
     if (m_channelRefCount == 0) {
         [ m_channelRefMutex unlock ];
 #ifdef HYDNADEBUG
-		debugPrint(@"Connection", 0, @"No more refs, destroy connection");
+        debugPrint(@"Connection", 0, @"No more refs, destroy connection");
 #endif
         [ m_destroyingMutex lock ];
         [ m_closingMutex lock ];
@@ -289,7 +289,7 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
     
     if (m_resolved) {
 #ifdef HYDNADEBUG
-		debugPrint(@"Connection", 0, @"The channel was already resolved, cancel the resolve request");
+        debugPrint(@"Connection", 0, @"The channel was already resolved, cancel the resolve request");
 #endif
         [ request release ];
         return NO;
@@ -300,7 +300,7 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
         [ m_resolveMutex unlock ];
         
 #ifdef HYDNADEBUG
-		debugPrint(@"Connection", 0, @"A open request is waiting to be sent, queue up the new open request");
+        debugPrint(@"Connection", 0, @"A open request is waiting to be sent, queue up the new open request");
 #endif
         [ m_resolveWaitMutex lock ];
         queue = [ m_resolveWaitQueue objectForKey:path];
@@ -314,7 +314,7 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
         [ m_resolveWaitMutex unlock ];
     } else if (!m_handshaked) {
 #ifdef HYDNADEBUG
-		debugPrint(@"Connection", 0, @"No connection, queue up the new open request");
+        debugPrint(@"Connection", 0, @"No connection, queue up the new open request");
 #endif
         [ m_pendingResolveRequests setObject:request forKey:path];
         [ m_resolveMutex unlock ];
@@ -324,11 +324,11 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
             [ self connectConnectionWithHost:m_host port:m_port auth:m_auth ];
         }
     } else {
-		[ m_pendingResolveRequests setObject:request forKey:path ];
+        [ m_pendingResolveRequests setObject:request forKey:path ];
         [ m_resolveMutex unlock ];
         
 #ifdef HYDNADEBUG
-		debugPrint(@"Connection", 0, @"Already connected, sending the new open request");
+        debugPrint(@"Connection", 0, @"Already connected, sending the new open request");
 #endif
         
         [ self writeBytes:[ request frame ]];
@@ -344,14 +344,14 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
     NSMutableArray *queue;
     
 #ifdef HYDNADEBUG
-	debugPrint(@"Connection", chcomp, @"A channel is trying to send a new open request");
+    debugPrint(@"Connection", chcomp, @"A channel is trying to send a new open request");
 #endif
     
     [ m_openChannelsMutex lock ];
     if ([ m_openChannels objectForKey:[ NSNumber numberWithInteger:chcomp ]] != nil) {
         [ m_openChannelsMutex unlock ];
 #ifdef HYDNADEBUG
-		debugPrint(@"Connection", chcomp, @"The channel was already open, cancel the open request");
+        debugPrint(@"Connection", chcomp, @"The channel was already open, cancel the open request");
 #endif
         [ request release ];
         return NO;
@@ -363,7 +363,7 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
         [ m_pendingMutex unlock ];
         
 #ifdef HYDNADEBUG
-		debugPrint(@"Connection", chcomp, @"A open request is waiting to be sent, queue up the new open request");
+        debugPrint(@"Connection", chcomp, @"A open request is waiting to be sent, queue up the new open request");
 #endif
         [ m_openWaitMutex lock ];
         queue = [ m_openWaitQueue objectForKey:[ NSNumber numberWithInteger:chcomp ]];
@@ -377,7 +377,7 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
         [ m_openWaitMutex unlock ];
     } else if (!m_handshaked) {
 #ifdef HYDNADEBUG
-		debugPrint(@"Connection", chcomp, @"No connection, queue up the new open request");
+        debugPrint(@"Connection", chcomp, @"No connection, queue up the new open request");
 #endif
         [ m_pendingOpenRequests setObject:request forKey:[ NSNumber numberWithInteger:chcomp ]];
         [ m_pendingMutex unlock ];
@@ -387,11 +387,11 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
             [ self connectConnectionWithHost:m_host port:m_port auth:m_auth ];
         }
     } else {
-		[ m_pendingOpenRequests setObject:request forKey:[ NSNumber numberWithInteger:chcomp ]];
+        [ m_pendingOpenRequests setObject:request forKey:[ NSNumber numberWithInteger:chcomp ]];
         [ m_pendingMutex unlock ];
         
 #ifdef HYDNADEBUG
-		debugPrint(@"Connection", chcomp, @"Already connected, sending the new open request");
+        debugPrint(@"Connection", chcomp, @"Already connected, sending the new open request");
 #endif
         [ self writeBytes:[ request frame ]];
         [ request setSent:YES ];
@@ -467,10 +467,10 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
     NSArray *addresses =  [ nshost addresses ];
     NSString *address = @"";
     
-	++m_attempt;
-	
+    ++m_attempt;
+    
 #ifdef HYDNADEBUG
-	debugPrint(@"Connection", 0, [ NSString stringWithFormat:@"Connecting, attempt %i", m_attempt]);
+    debugPrint(@"Connection", 0, [ NSString stringWithFormat:@"Connecting, attempt %i", m_attempt]);
 #endif
     
     for (NSString *a in addresses) {
@@ -508,7 +508,7 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
                 }
             } else {
 #ifdef HYDNADEBUG
-				debugPrint(@"Connection", 0, @"Connected, sending HTTP upgrade request");
+                debugPrint(@"Connection", 0, @"Connected, sending HTTP upgrade request");
 #endif
                 [ self connectHandler:auth ];
             }
@@ -527,24 +527,24 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
     NSInteger n = -1;
     NSUInteger offset = 0;
     
-	NSString *request = [ NSString stringWithFormat:@"GET /%@ HTTP/1.1\r\n"
-						"Connection: upgrade\r\n"
-						"Upgrade: winksock/1\r\n"
-						"Host: %@\r\n"
-						"X-Follow-Redirects: ", auth, m_host ];
-	
-	// Redirects are not supported yet
-	if (m_followRedirects) {
-		request = [ request stringByAppendingFormat:@"yes" ];
-	} else {
-		request = [ request stringByAppendingFormat:@"no" ];
-	}
-	
-	// End of upgrade request
-	request = [ request stringByAppendingFormat:@"\r\n\r\n" ];
-	
-	data = [ request UTF8String ];
-	length = [ request length ];
+    NSString *request = [ NSString stringWithFormat:@"GET /%@ HTTP/1.1\r\n"
+                        "Connection: upgrade\r\n"
+                        "Upgrade: winksock/1\r\n"
+                        "Host: %@\r\n"
+                        "X-Follow-Redirects: ", auth, m_host ];
+    
+    // Redirects are not supported yet
+    if (m_followRedirects) {
+        request = [ request stringByAppendingFormat:@"yes" ];
+    } else {
+        request = [ request stringByAppendingFormat:@"no" ];
+    }
+    
+    // End of upgrade request
+    request = [ request stringByAppendingFormat:@"\r\n\r\n" ];
+    
+    data = [ request UTF8String ];
+    length = [ request length ];
         
     while (offset < length && n != 0) {
         n = write(m_connectionFDS, data + offset, length - offset);
@@ -561,127 +561,127 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
 - (void) handshakeHandler
 {
 #ifdef HYDNADEBUG
-	debugPrint(@"Connection", 0, @"Incoming upgrade response");
+    debugPrint(@"Connection", 0, @"Incoming upgrade response");
 #endif
-	
-	char lf = '\n';
-	char cr = '\r';
-	BOOL fieldsLeft = YES;
-	BOOL gotResponse = NO;
-	BOOL gotRedirect = NO;
-	NSString *location = @"";
-	
-	while (fieldsLeft) {
-		NSMutableString *line = [NSMutableString stringWithCapacity:100];
-		char c = ' ';
-		
-		while (c != lf) {
-			read(m_connectionFDS, &c, 1);
-			
-			if (c != lf && c != cr) {
-				[ line appendFormat:@"%c", c ];
-			} else if ([ line length ] == 0) {
-				fieldsLeft = NO;
-			}
-		}
-		
-		if (fieldsLeft) {
-			// First line is a response, all others are fields
-			if (!gotResponse) {
-				NSInteger code = 0;
-				NSRange pos;
-				
-				// Take the response code from "HTTP/1.1 101 Switching Protocols"
-				pos = [ line rangeOfString:@" " ];
-				if (pos.length != 0) {
-					NSString *line2 = [ line substringFromIndex:pos.location + 1 ];
-					pos = [ line2 rangeOfString:@" " ];
-					
-					if (pos.length != 0) {
-						code = [[ line2 substringToIndex:pos.location ] integerValue ];
-					}
-				}
-				
-				switch (code) {
-					case 101:
-						// Everything is ok, continue.
-						break;
-					case 300:
-					case 301:
-					case 302:
-					case 303:
-					case 304:
-						if (!m_followRedirects) {
-							[ self destroy:@"Bad handshake (HTTP-redirection disabled)" ];
-							return;
-						}
-						
-						if (m_attempt > MAX_REDIRECT_ATTEMPTS) {
-							[ self destroy:@"Bad handshake (Too many redirect attempts)" ];
-							return;
-						}
-						
-						gotRedirect = YES;
-						break;
-					default:
-						[ self destroy:[ NSString stringWithFormat:@"Server responded with bad HTTP response code, %i", code ] ];
-						return;
-				}
-				
-				gotResponse = YES;
-			} else {
-				NSString *lowline = [ line lowercaseString ];
-				NSRange pos;
-				
-				if (gotRedirect) {
-					pos = [ lowline rangeOfString:@"location: " ];
-					if (pos.length != 0) {
-						location = [ lowline substringFromIndex:pos.location + 10 ];
-					}
-				} else {
-					pos = [ lowline rangeOfString:@"upgrade: " ];
-					if (pos.length != 0) {
-						NSString *header = [ lowline substringFromIndex:pos.location + 9 ];
-					
-						if (![ header isEqualToString:@"winksock/1" ]) {
-							[ self destroy:[ NSString stringWithFormat:@"Bad protocol version: %@", header ] ];
-							return;
-						}
-					}
-				}
-			}
-		}
-	}
+    
+    char lf = '\n';
+    char cr = '\r';
+    BOOL fieldsLeft = YES;
+    BOOL gotResponse = NO;
+    BOOL gotRedirect = NO;
+    NSString *location = @"";
+    
+    while (fieldsLeft) {
+        NSMutableString *line = [NSMutableString stringWithCapacity:100];
+        char c = ' ';
+        
+        while (c != lf) {
+            read(m_connectionFDS, &c, 1);
+            
+            if (c != lf && c != cr) {
+                [ line appendFormat:@"%c", c ];
+            } else if ([ line length ] == 0) {
+                fieldsLeft = NO;
+            }
+        }
+        
+        if (fieldsLeft) {
+            // First line is a response, all others are fields
+            if (!gotResponse) {
+                NSInteger code = 0;
+                NSRange pos;
+                
+                // Take the response code from "HTTP/1.1 101 Switching Protocols"
+                pos = [ line rangeOfString:@" " ];
+                if (pos.length != 0) {
+                    NSString *line2 = [ line substringFromIndex:pos.location + 1 ];
+                    pos = [ line2 rangeOfString:@" " ];
+                    
+                    if (pos.length != 0) {
+                        code = [[ line2 substringToIndex:pos.location ] integerValue ];
+                    }
+                }
+                
+                switch (code) {
+                    case 101:
+                        // Everything is ok, continue.
+                        break;
+                    case 300:
+                    case 301:
+                    case 302:
+                    case 303:
+                    case 304:
+                        if (!m_followRedirects) {
+                            [ self destroy:@"Bad handshake (HTTP-redirection disabled)" ];
+                            return;
+                        }
+                        
+                        if (m_attempt > MAX_REDIRECT_ATTEMPTS) {
+                            [ self destroy:@"Bad handshake (Too many redirect attempts)" ];
+                            return;
+                        }
+                        
+                        gotRedirect = YES;
+                        break;
+                    default:
+                        [ self destroy:[ NSString stringWithFormat:@"Server responded with bad HTTP response code, %i", code ] ];
+                        return;
+                }
+                
+                gotResponse = YES;
+            } else {
+                NSString *lowline = [ line lowercaseString ];
+                NSRange pos;
+                
+                if (gotRedirect) {
+                    pos = [ lowline rangeOfString:@"location: " ];
+                    if (pos.length != 0) {
+                        location = [ lowline substringFromIndex:pos.location + 10 ];
+                    }
+                } else {
+                    pos = [ lowline rangeOfString:@"upgrade: " ];
+                    if (pos.length != 0) {
+                        NSString *header = [ lowline substringFromIndex:pos.location + 9 ];
+                    
+                        if (![ header isEqualToString:@"winksock/1" ]) {
+                            [ self destroy:[ NSString stringWithFormat:@"Bad protocol version: %@", header ] ];
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+    }
 
-	if (gotRedirect) {
-		m_connected = NO;
-		
+    if (gotRedirect) {
+        m_connected = NO;
+        
 #ifdef HYDNADEBUG
-		debugPrint(@"Connection", 0, [ NSString stringWithFormat:@"Redirected to location: %@", location]);
+        debugPrint(@"Connection", 0, [ NSString stringWithFormat:@"Redirected to location: %@", location]);
 #endif
-		URL *url = [[[ URL alloc ] initWithExpr:location ] autorelease ];
-		
-		if (![[ url protocol ] isEqualToString:@"http" ]) {
-			if ([[ url protocol ] isEqualToString:@"https" ]) {
-				[ self destroy:@"The protocol HTTPS is not supported" ];
-			} else {
-				[ self destroy:[ NSString stringWithFormat:@"Unknown protocol, \"%@\"", [ url protocol ]]];
-			}
-		}
-		
-		if (![[ url error ] isEqualToString:@"" ]) {
-			[ self destroy:[ NSString stringWithFormat:@"%@", [ url error ]]];
-		}
-		
-		[ self connectConnectionWithHost:[ url host ] port:[ url port ] auth:[ url path ]];
-		return;
-	}
+        URL *url = [[[ URL alloc ] initWithExpr:location ] autorelease ];
+        
+        if (![[ url protocol ] isEqualToString:@"http" ]) {
+            if ([[ url protocol ] isEqualToString:@"https" ]) {
+                [ self destroy:@"The protocol HTTPS is not supported" ];
+            } else {
+                [ self destroy:[ NSString stringWithFormat:@"Unknown protocol, \"%@\"", [ url protocol ]]];
+            }
+        }
+        
+        if (![[ url error ] isEqualToString:@"" ]) {
+            [ self destroy:[ NSString stringWithFormat:@"%@", [ url error ]]];
+        }
+        
+        [ self connectConnectionWithHost:[ url host ] port:[ url port ] auth:[ url path ]];
+        return;
+    }
     
     m_handshaked = YES;
     m_connecting = NO;
     
 #ifdef HYDNADEBUG
-	debugPrint(@"Connection", 0, @"Handshake done on connection");
+    debugPrint(@"Connection", 0, @"Handshake done on connection");
 #endif
     
     for (NSString *key in m_pendingResolveRequests) {
@@ -691,7 +691,7 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
         if (m_connected) {
             [ request setSent:YES ];
 #ifdef HYDNADEBUG
-			debugPrint(@"Connection", [ request ch ], @"Resolve request sent");
+            debugPrint(@"Connection", [ request ch ], @"Resolve request sent");
 #endif
         } else {
             return;
@@ -700,7 +700,7 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
     }
     
 #ifdef HYDNADEBUG
-	debugPrint(@"Connection", 0, @"Creating a new thread for frame listening");
+    debugPrint(@"Connection", 0, @"Creating a new thread for frame listening");
 #endif
     
     [NSThread detachNewThreadSelector:@selector(listen:) toTarget:self withObject:nil];
@@ -745,14 +745,14 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
                 [ m_listeningMutex unlock ];
                 [ self destroy:@"Could not read from the connection" ];
             } else {
-				[ m_listeningMutex unlock ];
-			}
+                [ m_listeningMutex unlock ];
+            }
             break;
         }
         
         size = ntohs(*(unsigned short*)&header[0]);
         payload = malloc((size - headerSize) * sizeof(char));
-		
+        
         while (offset < size + LENGTH_OFFSET && n > 0) {
             n = read(m_connectionFDS, payload + offset - (headerSize + LENGTH_OFFSET), (size + LENGTH_OFFSET) - offset);
             offset += n;
@@ -764,8 +764,8 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
                 [ m_listeningMutex unlock ];
                 [ self destroy:@"Could not read from the connection" ];
             } else {
-				[ m_listeningMutex unlock ];
-			}
+                [ m_listeningMutex unlock ];
+            }
             break;
         }
         
@@ -780,26 +780,26 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
         switch (op) {
             case KEEPALIVE:
 #ifdef HYDNADEBUG
-				debugPrint(@"Connection", ch, @"Received heartbeat");
+                debugPrint(@"Connection", ch, @"Received heartbeat");
 #endif
-                break;	
+                break;    
             case OPEN:
 #ifdef HYDNADEBUG
-				debugPrint(@"Connection", ch, @"Received open response");
+                debugPrint(@"Connection", ch, @"Received open response");
 #endif
                 [ self processOpenFrameWithChannelId:ch errcode:flag payload:data ];
                 break;
                 
             case DATA:
 #ifdef HYDNADEBUG
-				debugPrint(@"Connection", ch, @"Received data");
+                debugPrint(@"Connection", ch, @"Received data");
 #endif
                 [ self processDataFrameWithChannelId:ch ctype:ctype priority:flag payload:data ];
                 break;
                 
             case SIGNAL:
 #ifdef HYDNADEBUG
-				debugPrint(@"Connection", ch, @"Received signal");
+                debugPrint(@"Connection", ch, @"Received signal");
 #endif
                 [ self processSignalFrameWithChannelId:ch ctype:ctype flag:flag payload:data ];
                 break;
@@ -816,7 +816,7 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
         n = 1;
     }
 #ifdef HYDNADEBUG
-	debugPrint(@"Connection", 0, @"Listening thread exited");
+    debugPrint(@"Connection", 0, @"Listening thread exited");
 #endif
     [ pool release ];
 }
@@ -859,7 +859,7 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
     OpenRequest *request = nil;
     Channel *channel;
     NSUInteger respch = 0;
-	NSString *message = @"";
+    NSString *message = @"";
     
     [ m_pendingMutex lock ];
     request = [ m_pendingOpenRequests objectForKey:[ NSNumber numberWithInteger:ch ]];
@@ -874,10 +874,10 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
     
     if (errcode == OPEN_ALLOW) {
         respch = ch;
-		
-		if ([ payload length ] > 0) {
-			message = [[ NSString alloc ] initWithBytes:[ payload bytes ] length:[ payload length ] encoding:NSUTF8StringEncoding ];
-		}
+        
+        if ([ payload length ] > 0) {
+            message = [[ NSString alloc ] initWithBytes:[ payload bytes ] length:[ payload length ] encoding:NSUTF8StringEncoding ];
+        }
     } else if (errcode == OPEN_REDIRECT) {
         if ([ payload length ] < 4) {
             [ self destroy:@"Expected redirect channel from the server" ];
@@ -889,13 +889,13 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
         respch = ntohl(*(unsigned int*)&data[0]);
         
 #ifdef HYDNADEBUG
-		debugPrint(@"Connection",     ch, [ NSString stringWithFormat:@"Redirected from %u", ch]);
-		debugPrint(@"Connection", respch, [ NSString stringWithFormat:@"             to %u", respch ]);
+        debugPrint(@"Connection",     ch, [ NSString stringWithFormat:@"Redirected from %u", ch]);
+        debugPrint(@"Connection", respch, [ NSString stringWithFormat:@"             to %u", respch ]);
 #endif
-		
-		if ([ payload length ] > 4) {
-			message = [[ NSString alloc ] initWithBytes:[ payload bytes ]+4 length:[ payload length ]-4 encoding:NSUTF8StringEncoding ];
-		}
+        
+        if ([ payload length ] > 4) {
+            message = [[ NSString alloc ] initWithBytes:[ payload bytes ]+4 length:[ payload length ]-4 encoding:NSUTF8StringEncoding ];
+        }
     } else {
         [ m_pendingMutex lock ];
         [ request release ];
@@ -913,7 +913,7 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
         }
 
 #ifdef HYDNADEBUG
-		debugPrint(@"Connection", ch, [ NSString stringWithFormat:@"The server rejected the open request, errorcode %i", errcode ]);
+        debugPrint(@"Connection", ch, [ NSString stringWithFormat:@"The server rejected the open request, errorcode %i", errcode ]);
 #endif
         [ channel destroy:[ ChannelError fromOpenError:errcode data:m ]];
         return;
@@ -929,8 +929,8 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
     [ m_openChannels setObject:channel forKey:[ NSNumber numberWithInteger:respch ]];
     
 #ifdef HYDNADEBUG
-	debugPrint(@"Connection", respch, @"A new channel was added");
-	debugPrint(@"Connection", respch, [ NSString stringWithFormat:@"The size of openChannel is now %i", [ m_openChannels count ]]);
+    debugPrint(@"Connection", respch, @"A new channel was added");
+    debugPrint(@"Connection", respch, [ NSString stringWithFormat:@"The size of openChannel is now %i", [ m_openChannels count ]]);
 #endif
     [ m_openChannelsMutex unlock ];
     
@@ -1067,27 +1067,27 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
         [ m_openChannelsMutex lock ];
         Channel *channel = [ m_openChannels objectForKey:[ NSNumber numberWithInteger:ch ]];
         [ m_openChannelsMutex unlock ];
-		
+        
         if (!channel) {
             [ self destroy:@"Frame sent to unknown channel" ];
             return;
         }
-		
-		if (flag != SIG_EMIT && ![ channel isClosing ]) {
+        
+        if (flag != SIG_EMIT && ![ channel isClosing ]) {
             
-			Frame *frame = [[ Frame alloc ] initWithChannel:ch ctype:ctype op:SIGNAL flag:SIG_END payload:payload ];
-			
-			@try {
-				[ self writeBytes:frame ];
-			}
-			@catch (NSException *e) {
-				[ payload release ];
-				[ self destroy: [ e reason ] ];
-			}
-			
-			return;
-		}
-		
+            Frame *frame = [[ Frame alloc ] initWithChannel:ch ctype:ctype op:SIGNAL flag:SIG_END payload:payload ];
+            
+            @try {
+                [ self writeBytes:frame ];
+            }
+            @catch (NSException *e) {
+                [ payload release ];
+                [ self destroy: [ e reason ] ];
+            }
+            
+            return;
+        }
+        
         [ self processSignalFrameWithChannel:channel ctype:ctype flag:flag payload:payload ];
     }
 
@@ -1100,17 +1100,17 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
     [ m_destroyingMutex unlock ];
     
 #ifdef HYDNADEBUG
-	debugPrint(@"Connection", 0, [ NSString stringWithFormat:@"Destroying connection because: %@", error ]);
+    debugPrint(@"Connection", 0, [ NSString stringWithFormat:@"Destroying connection because: %@", error ]);
 #endif
     
     [ m_pendingMutex lock ];
 #ifdef HYDNADEBUG
-	debugPrint(@"Connection", 0, [ NSString stringWithFormat:@"Destroying pendingOpenRequests of size %i", [ m_pendingOpenRequests count ]]);
+    debugPrint(@"Connection", 0, [ NSString stringWithFormat:@"Destroying pendingOpenRequests of size %i", [ m_pendingOpenRequests count ]]);
 #endif
     
     for (NSNumber *key in m_pendingOpenRequests) {
 #ifdef HYDNADEBUG
-		debugPrint(@"Connection", [ key intValue ], @"Destroying channel");
+        debugPrint(@"Connection", [ key intValue ], @"Destroying channel");
 #endif
         [[[ m_pendingOpenRequests objectForKey:key ] channel ] destroy:error ];
     }
@@ -1119,7 +1119,7 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
     
     [ m_openWaitMutex lock ];
 #ifdef HYDNADEBUG
-	debugPrint(@"Connection", 0, [ NSString stringWithFormat:@"Destroying waitQueue of size %i", [ m_openWaitQueue count ]]);
+    debugPrint(@"Connection", 0, [ NSString stringWithFormat:@"Destroying waitQueue of size %i", [ m_openWaitQueue count ]]);
 #endif
     
     for (NSNumber *key in m_openWaitQueue) {
@@ -1135,12 +1135,12 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
     
     [ m_openChannelsMutex lock ];
 #ifdef HYDNADEBUG
-	debugPrint(@"Connection", 0, [ NSString stringWithFormat:@"Destroying openChannels of size %i", [ m_openChannels count ]]);
+    debugPrint(@"Connection", 0, [ NSString stringWithFormat:@"Destroying openChannels of size %i", [ m_openChannels count ]]);
 #endif
     
     for (NSNumber *key in m_openChannels) {
 #ifdef HYDNADEBUG
-		debugPrint(@"Connection", [ key intValue ], @"Destroying channel");
+        debugPrint(@"Connection", [ key intValue ], @"Destroying channel");
 #endif
         [[ m_openChannels objectForKey:key ] destroy:error ];
     }
@@ -1149,7 +1149,7 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
     
     if (m_connected) {
 #ifdef HYDNADEBUG
-		debugPrint(@"Connection", 0, @"Closing connection");
+        debugPrint(@"Connection", 0, @"Closing connection");
 #endif
         [ m_listeningMutex lock ];
         m_listening = NO;
@@ -1171,7 +1171,7 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
     [ m_connectionMutex unlock ];
     
 #ifdef HYDNADEBUG
-	debugPrint(@"Connection", 0, @"Destroying connection done");
+    debugPrint(@"Connection", 0, @"Destroying connection done");
 #endif
     
     [ m_destroyingMutex lock ];

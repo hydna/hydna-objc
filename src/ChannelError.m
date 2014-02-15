@@ -14,7 +14,7 @@
     if (![data isEqualToString:@""] || [ data length ] != 0) {
         msg = data;
     } else if (flag < 7) {
-		msg = @"Not allowed to open channel";
+        msg = @"Not allowed to open channel";
     }
     
     return msg;
@@ -27,7 +27,7 @@
     if (![data isEqualToString: @""] || [ data length ] != 0) {
         msg = data;
     } else if (flag == 0) {
-		msg = @"Bad signal";    
+        msg = @"Bad signal";    
     }
     
     return msg;

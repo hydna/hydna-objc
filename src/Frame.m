@@ -76,11 +76,11 @@ const unsigned int RESOLVE_CHANNEL = 0x0;
 
 - (void) setChannel:(NSUInteger)value
 {
-	char result[4];
-	
-	*(unsigned int*)&result[0] = htonl(value);
-	
-	[ m_bytes replaceBytesInRange:NSMakeRange(3, 4) withBytes:result ];
+    char result[4];
+    
+    *(unsigned int*)&result[0] = htonl(value);
+    
+    [ m_bytes replaceBytesInRange:NSMakeRange(3, 4) withBytes:result ];
 }
 
 @end
