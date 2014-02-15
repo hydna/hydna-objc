@@ -3,8 +3,6 @@
 //  hydna-objc
 //
 
-#import <Cocoa/Cocoa.h>
-
 #import "OpenRequest.h"
 #import "Frame.h"
 

@@ -3,8 +3,6 @@
 //    hydna-objc
 //
 
-#import <Cocoa/Cocoa.h>
-
 
 @interface URL : NSObject {
     NSUInteger m_port;

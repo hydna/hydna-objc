@@ -403,6 +403,13 @@
             [ self destroy: [ e reason ] ];
         }
     } else {
+        // TODO: check if this works:)
+        if(self.delegate && [self.delegate respondsToSelector:@selector(channelOpen:)]){
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [self.delegate channelOpen:self message:message];
+            });
+        }
+        
         [ m_connectMutex unlock ];
     }
 
@@ -443,14 +450,30 @@
     
     m_error = [ error copy ];
     
+    
     [ m_connectMutex unlock ];
+    
+    // TODO: check if this works:)
+    if(self.delegate && [self.delegate respondsToSelector:@selector(channelClose:)]){
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self.delegate channelClose:self error:nil];
+        });
+    }
 }
 
 - (void) addData:(ChannelData*)data
 {
-    [ m_dataMutex lock ];
-    [ m_dataQueue addObject:data ];
-    [ m_dataMutex unlock ];
+    // TODO: check if this works:)
+    if(self.delegate && [self.delegate respondsToSelector:@selector(channelMessage:)]){
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self.delegate channelMessage:self data:data];
+        });
+    }else{
+        [ m_dataMutex lock ];
+        [ m_dataQueue addObject:data ];
+        [ m_dataMutex unlock ];
+    }
+
 }
 
 - (ChannelData*) popData
@@ -478,9 +501,16 @@
 
 - (void) addSignal:(ChannelSignal*)signal
 {
-    [ m_signalMutex lock ];
-    [ m_signalQueue addObject:signal ];
-    [ m_signalMutex unlock ];
+    // TODO: check if this works:)
+    if(self.delegate && [self.delegate respondsToSelector:@selector(channelSignal:)]){
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self.delegate channelSignal:self data:signal];
+        });
+    }else{
+        [ m_signalMutex lock ];
+        [ m_signalQueue addObject:signal];
+        [ m_signalMutex unlock ];
+    }
 }
 
 - (ChannelSignal*) popSignal

@@ -3,8 +3,6 @@
 //  hydna-objc
 //
 
-#import <Cocoa/Cocoa.h>
-
 #import "Connection.h"
 #import "OpenRequest.h"
 #import "ChannelData.h"
@@ -26,6 +24,27 @@ typedef enum {
  *  A user of the library should use an instance of this class
  *  to communicate with a server.
  */
+
+@class Channel;
+
+@protocol ChannelDelegate <NSObject>
+@optional
+- (void) channelOpen:(Channel*)sender message:(NSString*)message;
+/*
+ If a request to open a channel is denied, if the channel is later closed, or if something goes wrong, the channel will 
+ closed and a onclose-event is triggered. The event handler takes a single argument — event — with the following properties:
+ 
+ reason (String) the reason the channel was closed.
+ hadError (boolean) true if the channel was closed due to an error.
+ wasDenied (boolean) true if the request to open the channel was denied.
+ wasClean (boolean) true if the channel was cleanly ended (either by calling channel.close() or from a Behavior).
+ */
+
+- (void) channelClose:(Channel*)sender error:(NSError*)error;
+- (void) channelMessage:(Channel*)sender data:(ChannelData*)data;
+- (void) channelSignal:(Channel*)sender data:(ChannelSignal*)data;
+@end
+
 @interface Channel : NSObject {
     NSUInteger m_ch;
     NSString *m_path;
@@ -55,7 +74,11 @@ typedef enum {
     NSLock *m_dataMutex;
     NSLock *m_signalMutex;
     NSLock *m_connectMutex;
+    
+    //id <ChannelDelegate> _delegate;
 }
+
+@property(nonatomic, assign) id <ChannelDelegate> delegate;
 
 /**
  *  Initializes a new Channel instance
