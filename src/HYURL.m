@@ -3,12 +3,12 @@
 //  hydna-objc
 //
 
-#import "URL.h"
+#import "HYURL.h"
 
 
-@implementation URL
+@implementation HYURL
 
-- (id) initWithExpr:(NSString*)expr
+- (id)initWithExpr:(NSString *)expr
 {
     if (!(self = [super init])) {
         return nil;
@@ -23,47 +23,47 @@
     NSString *error = @"";
     NSRange pos;
     
-    // Host can be on the form "http://auth@localhost:80/x00112233?token"
+    // Host can be on the form "http://auth@localhost:80/path?token"
     
     // Take out the protocol
-    pos = [ host rangeOfString:@"://" ];
+    pos = [host rangeOfString:@"://"];
     if (pos.length != 0) {
-        protocol = [ host substringToIndex:pos.location ];
-        protocol = [ protocol lowercaseString ];
-        host = [ host substringFromIndex:pos.location + 3];
+        protocol = [host substringToIndex:pos.location];
+        protocol = [protocol lowercaseString];
+        host = [host substringFromIndex:pos.location + 3];
     }
     
     // Take out the auth
-    pos = [ host rangeOfString:@"@" ];
+    pos = [host rangeOfString:@"@"];
     if (pos.length != 0) {
-        auth = [ host substringToIndex:pos.location ];
-        host = [ host substringFromIndex:pos.location + 1 ];
+        auth = [host substringToIndex:pos.location];
+        host = [host substringFromIndex:pos.location + 1];
     }
     
     // Take out the token
-    pos = [ host rangeOfString:@"?" ];
+    pos = [host rangeOfString:@"?"];
     if (pos.length != 0) {
-        tokens = [ host substringFromIndex:pos.location + 1];
-        host = [ host substringToIndex:pos.location ];
+        tokens = [host substringFromIndex:pos.location + 1];
+        host = [host substringToIndex:pos.location];
     }
     
     // Take out the path
-    pos = [ host rangeOfString:@"/" ];
+    pos = [host rangeOfString:@"/"];
     if (pos.length != 0) {
-        path = [ host substringFromIndex:pos.location + 1];
-        host = [ host substringToIndex:pos.location ];
+        path = [host substringFromIndex:pos.location + 1];
+        host = [host substringToIndex:pos.location];
     }
     
     // Take out the port
-    pos = [ host rangeOfString:@":" ];
+    pos = [host rangeOfString:@":"];
     if (pos.length != 0) {
-        port = [[ host substringFromIndex:pos.location + 1] integerValue];
+        port = [[host substringFromIndex:pos.location + 1] integerValue];
         
         if (port == 0) {
             error = @"Could not read the port \"%i\"";
         }
         
-        host = [ host substringToIndex:pos.location ];
+        host = [host substringToIndex:pos.location];
     }
     
     self->m_path = path;

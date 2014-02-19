@@ -3,10 +3,11 @@
 //  hydna-objc
 //
 
-#import "Connection.h"
-#import "OpenRequest.h"
-#import "ChannelData.h"
-#import "ChannelSignal.h"
+#import "HYConnection.h"
+#import "HYOpenRequest.h"
+#import "HYChannelData.h"
+#import "HYChannelSignal.h"
+#import "HYChannelError.h"
 
 typedef enum {
     LISTEN = 0x00,
@@ -25,130 +26,96 @@ typedef enum {
  *  to communicate with a server.
  */
 
-@class Channel;
+@class HYChannel;
 
-@protocol ChannelDelegate <NSObject>
+@protocol HYChannelDelegate <NSObject>
 @optional
-- (void) channelOpen:(Channel*)sender message:(NSString*)message;
-/*
- If a request to open a channel is denied, if the channel is later closed, or if something goes wrong, the channel will 
- closed and a onclose-event is triggered. The event handler takes a single argument — event — with the following properties:
- 
- reason (String) the reason the channel was closed.
- hadError (boolean) true if the channel was closed due to an error.
- wasDenied (boolean) true if the request to open the channel was denied.
- wasClean (boolean) true if the channel was cleanly ended (either by calling channel.close() or from a Behavior).
- */
+- (void)channelOpen:(HYChannel *)sender
+            message:(NSString *)message;
 
-- (void) channelClose:(Channel*)sender error:(NSError*)error;
-- (void) channelMessage:(Channel*)sender data:(ChannelData*)data;
-- (void) channelSignal:(Channel*)sender data:(ChannelSignal*)data;
+- (void)channelClose:(HYChannel *)sender
+               error:(HYChannelError *)error;
+
+- (void)channelMessage:(HYChannel *)sender
+                  data:(HYChannelData *)data;
+
+- (void)channelSignal:(HYChannel *)sender
+                 data:(HYChannelSignal *)data;
 @end
 
-@interface Channel : NSObject {
-    NSUInteger m_ch;
-    NSString *m_path;
-    NSString *m_token;
-	NSString *m_message;
-    
-    Connection *m_connection;
-    
-    BOOL m_connected;
-	BOOL m_closing;
-	Frame *m_pendingClose;
-    BOOL m_readable;
-    BOOL m_writable;
-    BOOL m_emitable;
-    BOOL m_resolved;
-    
-    NSString *m_error;
-    
-    NSUInteger m_mode;
-    
-    OpenRequest *m_openRequest;
-    OpenRequest *m_resolveRequest;
-    
-    NSMutableArray *m_dataQueue;
-    NSMutableArray *m_signalQueue;
-    
-    NSLock *m_dataMutex;
-    NSLock *m_signalMutex;
-    NSLock *m_connectMutex;
-    
-    //id <ChannelDelegate> _delegate;
-}
+@interface HYChannel : NSObject
 
-@property(nonatomic, assign) id <ChannelDelegate> delegate;
+@property(nonatomic, assign) id <HYChannelDelegate> delegate;
 
 /**
  *  Initializes a new Channel instance
  */
-- (id) init;
+- (id)init;
 
-- (void) dealloc;
+- (void)dealloc;
 
 /**
  *  Checks if redirects should be followed.
  *
  *  @return The current status if redirects should be followed or not.
  */
-- (BOOL) getFollowRedirects;
+- (BOOL)getFollowRedirects;
 
 /**
  *  Sets if redirects should be followed or not.
  *
  *  @param value The new follow redirects status.
  */
-- (void) setFollowRedirects:(BOOL)value;
+- (void)setFollowRedirects:(BOOL)value;
 
 /**
  *  Checks the connected state for this Channel instance.
  *
  *  @return The connected state.
  */
-- (BOOL) isConnected;
+- (BOOL)isConnected;
 
 /**
  *  Checks the closing state for this Channel instance.
  *
  *  @return The closing state.
  */
-- (BOOL) isClosing;
+- (BOOL)isClosing;
 
 /**
  *  Checks if the channel is readable.
  *
  *  @return YES if channel is readable.
  */
-- (BOOL) isReadable;
+- (BOOL)isReadable;
 
 /**
  *  Checks if the channel is writable.
  *
  *  @return YES if channel is writable.
  */
-- (BOOL) isWritable;
+- (BOOL)isWritable;
 
 /**
  *  Checks if the channel can emit signals.
  *
  *  @return YES if channel has signal support.
  */
-- (BOOL) hasSignalSupport;
+- (BOOL)hasSignalSupport;
 
 /**
  *  Returns the channel that this instance listen to.
  *
  *  @return The channel.
  */
-- (NSUInteger) channel;
+- (NSUInteger)channel;
 
 /**
  *  Returns the message received when connected.
  *
  *  @return The message.
  */
-- (NSString*) message;
+- (NSString *)message;
 
 /**
  *  Resets the error.
@@ -160,7 +127,9 @@ typedef enum {
  *  @param mode The mode in which to open the channel.
  *  @param token An optional token.
  */
-- (void) connect:(NSString*)expr mode:(NSUInteger)mode token:(NSData*)token;
+- (void)connect:(NSString *)expr
+           mode:(NSUInteger)mode
+          token:(NSString *)token;
 
 /**
  *  Sends data to the channel.
@@ -168,28 +137,32 @@ typedef enum {
  *  @param data The data to write to the channel.
  *  @param priority The priority of the data.
  */
-- (void) writeBytes:(NSData*)data priority:(NSUInteger)priority ctype:(NSUInteger)ctype;
+- (void)writeBytes:(NSData *)data
+          priority:(NSUInteger)priority
+             ctype:(NSUInteger)ctype;
 
 /**
  *  Calls writeBytes:priority: with a priority of 0.
  *
  *  @param data The data to write to the channel.
  */
-- (void) writeBytes:(NSData*)data ctype:(NSUInteger)ctype;
+- (void)writeBytes:(NSData *)data
+             ctype:(NSUInteger)ctype;
 
 /**
  *  Sends string data to the channel.
  *
  *  @param value The string to be sent.
  */
-- (void) writeString:(NSString*)string;
+- (void)writeString:(NSString *)string;
 
 /**
  *  Sends string data to the channel with optional priority.
  *
  *  @param value The string to be sent.
  */
-- (void) writeString:(NSString*)string priority:(NSInteger)priority;
+- (void)writeString:(NSString *)string
+           priority:(NSInteger)priority;
 
 /**
  *  Sends data signal to the channel.
@@ -197,19 +170,20 @@ typedef enum {
  *  @param data The data to write to the channel.
  *  @param ctype The data type to write to the channel.
  */
-- (void) emitBytes:(NSData*)data ctype:(NSUInteger)ctype;
+- (void)emitBytes:(NSData *)data
+            ctype:(NSUInteger)ctype;
 
 /**
  *  Sends a string signal to the channel.
  *
  *  @param string The string to be sent.
  */
-- (void) emitString:(NSString*)string;
+- (void)emitString:(NSString *)string;
 
 /**
  *  Closes the Channel instance.
  */
-- (void) close;
+- (void)close;
 
 
 /**
@@ -218,7 +192,9 @@ typedef enum {
  *
  *  @param respch The response channel.
  */
-- (void) resolveSuccess:(NSUInteger)respch path:(NSString*)path token:(NSString*)token;
+- (void)resolveSuccess:(NSUInteger)respch
+                  path:(NSString *)path
+                 token:(NSString *)token;
 
 /**
  *  Internal callback for open success.
@@ -226,7 +202,8 @@ typedef enum {
  *
  *  @param respch The response channel.
  */
-- (void) openSuccess:(NSUInteger)respch message:(NSString*)message;
+- (void)openSuccess:(NSUInteger)respch
+            message:(NSString *)message;
 
 
 
@@ -234,21 +211,21 @@ typedef enum {
  *  Checks if some error has occured in the channel
  *  and throws an exception if that is the case.
  */
-- (void) checkForChannelError;
+- (void)checkForChannelError;
 
 /**
  *  Internally destroy channel.
  *
  *  @param error The cause of the destroy.
  */
-- (void) destroy:(NSString *)error;
+- (void)destroy:(HYChannelError *)error;
 
 /**
  *  Add data to the data queue.
  *
  *  @param data The data to add to queue.
  */
-- (void) addData:(ChannelData *)data;
+- (void)addData:(HYChannelData *)data;
 
 /**
  *  Pop the next data in the data queue.
@@ -256,21 +233,21 @@ typedef enum {
  *  @return The data that was removed from the queue,
  *          or nil if the queue was empty.
  */
-- (ChannelData*) popData;
+- (HYChannelData *)popData;
 
 /**
  *  Checks if the signal queue is empty.
  *
  *  @return YES if the queue is empty.
  */
-- (BOOL) isDataEmpty;
+- (BOOL)isDataEmpty;
 
 /**
  *  Add signals to the signal queue.
  *
  *  @param signal The signal to add to the queue.
  */
-- (void) addSignal:(ChannelSignal *)signal;
+- (void)addSignal:(HYChannelSignal *)signal;
 
 /**
  *  Pop the next signal in the signal queue.
@@ -278,13 +255,13 @@ typedef enum {
  *  @return The signal that was removed from the queue,
  *          or nil if the queue was empty.
  */
-- (ChannelSignal*) popSignal;
+- (HYChannelSignal *)popSignal;
 
 /**
  *  Checks if the signal queue is empty.
  *
  *  @return YES is the queue is empty.
  */
-- (BOOL) isSignalEmpty;
+- (BOOL)isSignalEmpty;
 
 @end

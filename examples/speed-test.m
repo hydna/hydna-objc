@@ -3,8 +3,7 @@
 //  hydna-objc
 //
 
-#import "Channel.h"
-#import "ChannelData.h"
+#import "HYChannel.h"
 
 #import <sys/time.h>
 
@@ -24,7 +23,7 @@ int getmicrosec() {
 
 int main(int argc, const char* argv[])
 {
-    NSAutoreleasePool *pool = [[ NSAutoreleasePool alloc ] init ];
+    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc ] init];
     
     if (argc != 2) {
         printf("Usage: %s {receive|send}\n", argv[0]);
@@ -34,11 +33,11 @@ int main(int argc, const char* argv[])
     unsigned int i = 0;
     
     @try {
-        Channel *channel = [[ Channel alloc ] init ];
-        [ channel connect:@"public.hydna.net/speed" mode:READWRITE token:nil ];
+        HYChannel *channel = [[HYChannel alloc] init];
+        [channel connect:@"public.hydna.net/speed" mode:READWRITE token:nil];
         
-        while (![ channel isConnected ]) {
-            [ channel checkForChannelError ];
+        while (![channel isConnected]) {
+            [channel checkForChannelError];
             sleep(1);
         }
         
@@ -48,8 +47,8 @@ int main(int argc, const char* argv[])
             printf("Receiving from /hellospeed\n");
             
             for (;;) {
-                if (![ channel isDataEmpty ]) {
-                    [ channel popData ];
+                if (![channel isDataEmpty]) {
+                    [channel popData];
                     
                     if (i == 0) {
                         time = getmicrosec();
@@ -64,7 +63,7 @@ int main(int argc, const char* argv[])
                         i = 0;
                     }
                 } else {
-                    [ channel checkForChannelError ];
+                    [channel checkForChannelError];
                 }
             }
         } else if (strcmp(argv[1], "send") == 0) {
@@ -73,7 +72,7 @@ int main(int argc, const char* argv[])
             time = getmicrosec();
             
             for (i = 0; i < NO_BROADCASTS; i++) {
-                [ channel writeString:CONTENT ];
+                [channel writeString:CONTENT];
             }
             
             time = getmicrosec() - time;
@@ -82,11 +81,11 @@ int main(int argc, const char* argv[])
             
             i = 0;
             while (i < NO_BROADCASTS) {
-                if (![ channel isDataEmpty ]) {
-                    [ channel popData ];
+                if (![channel isDataEmpty]) {
+                    [channel popData];
                     ++i;
                 } else {
-                    [ channel checkForChannelError ];
+                    [channel checkForChannelError];
                 }
             }
         } else {
@@ -94,12 +93,12 @@ int main(int argc, const char* argv[])
             return -1;
         }
         
-        [ channel close ];
-        [ channel release ];
+        [channel close];
+        [channel release];
     }
     @catch(NSException *e) {
-        printf("Caught exception (i=%u): %s %s\n", i, [[ e name ] UTF8String ], [[ e reason ] UTF8String ]);
+        printf("Caught exception (i=%u): %s %s\n", i, [[e name] UTF8String], [[e reason] UTF8String]);
     }
     
-    [ pool release ];
+    [pool release];
 }

@@ -3,8 +3,9 @@
 //  hydna-objc
 //
 
-#import "OpenRequest.h"
-#import "Frame.h"
+#import "HYOpenRequest.h"
+#import "HYFrame.h"
+
 
 #define TAKE_N_BITS_FROM(b, p, n) ((b) >> (p)) & ((1 << (n)) - 1);
 
@@ -14,40 +15,9 @@ extern const unsigned int MAX_REDIRECT_ATTEMPTS;
  *  This class is used internally by the Channel class.
  *  A user of the library should not create an instance of this class.
  */
-@interface Connection : NSObject {
-    NSLock *m_channelRefMutex;
-    NSLock *m_destroyingMutex;
-    NSLock *m_closingMutex;
-    NSLock *m_openChannelsMutex;
-    NSLock *m_openWaitMutex;
-    NSLock *m_pendingMutex;
-    NSLock *m_resolveMutex; // new
-    NSLock *m_resolveWaitMutex; // new
-    NSLock *m_resolveChannelsMutex; // new
-    NSLock *m_listeningMutex;
-    
-    BOOL m_connecting;
-    BOOL m_connected;
-    BOOL m_handshaked;
-    BOOL m_destroying;
-    BOOL m_closing;
-    BOOL m_listening;
-    BOOL m_resolved; // new
-    
-    NSString *m_host;
-    NSUInteger m_port;
-    NSString *m_auth;
-    NSInteger m_connectionFDS;
-    NSUInteger m_attempt;
-    
-    NSMutableDictionary *m_pendingOpenRequests;
-    NSMutableDictionary *m_pendingResolveRequests; // resolve que
-    NSMutableDictionary *m_openChannels;
-    NSMutableDictionary *m_openWaitQueue;
-    NSMutableDictionary *m_resolveWaitQueue; // resolve que
-    
-    NSInteger m_channelRefCount;
-}
+@interface HYConnection : NSObject
+
+
 
 /**
  *  Return an available connection or create a new one.
@@ -55,7 +25,9 @@ extern const unsigned int MAX_REDIRECT_ATTEMPTS;
  *  @param host The host associated with the connection.
  *  @param port The port associated with the connection.
  */
-+ (id) getConnectionWithHost:(NSString*)host port:(NSUInteger)port auth:(NSString*)auth;
++ (HYConnection *)getConnectionWithHost:(NSString *)host
+                                 port:(NSUInteger)port
+                                 auth:(NSString *)auth;
 
 
 /**
@@ -63,14 +35,14 @@ extern const unsigned int MAX_REDIRECT_ATTEMPTS;
  *
  *  @return The current status if redirects should be followed or not.
  */
-+ (BOOL) getFollowRedirects;
++ (BOOL)getFollowRedirects;
 
 /**
  *  Sets if redirects should be followed or not.
  *  
  *  @param value The new follow redirects status.
  */
-+ (void) setFollowRedirects:(BOOL)value;
++ (void)setFollowRedirects:(BOOL)value;
 
 /**
  *  Initializes a new Channel instance.
@@ -78,29 +50,31 @@ extern const unsigned int MAX_REDIRECT_ATTEMPTS;
  *  @param host The host the connection should connect to.
  *  @param port The port the connection should connect to.
  */
-- (id) initWithHost:(NSString*)host port:(NSUInteger)port auth:(NSString*)auth;
+- (id)initWithHost:(NSString *)host
+              port:(NSUInteger)port
+              auth:(NSString *)auth;
 
-- (void) dealloc;
+- (void)dealloc;
 
 /**
  *  Returns the handshake status of the connection.
  *
  *  @return YES if the connection has handshaked.
  */
-- (BOOL) hasHandshaked;
+- (BOOL)hasHandshaked;
 
 /**
  * Method to keep track of the number of channels that is associated 
  * with this connection instance.
  */
-- (void) allocChannel;
+- (void)allocChannel;
 
 /**
  *  Decrease the reference count.
  *
  *  @param ch The channel to dealloc.
  */
-- (void) deallocChannel:(NSUInteger)ch;
+- (void)deallocChannel:(NSUInteger)ch;
 
 /**
  *  Request to resolve a channel.
@@ -108,7 +82,7 @@ extern const unsigned int MAX_REDIRECT_ATTEMPTS;
  *  @param request The request to resolve the channel.
  *  @return YES if request went well, else NO.
  */
-- (BOOL) requestResolve:(OpenRequest*)request;
+- (BOOL)requestResolve:(HYOpenRequest *)request;
 
 
 /**
@@ -117,7 +91,7 @@ extern const unsigned int MAX_REDIRECT_ATTEMPTS;
  *  @param request The request to open the channel.
  *  @return YES if request went well, else NO.
  */
-- (BOOL) requestOpen:(OpenRequest*)request;
+- (BOOL)requestOpen:(HYOpenRequest *)request;
 
 /**
  *  Try to cancel an open request. Returns YES on success else NO.
@@ -125,7 +99,7 @@ extern const unsigned int MAX_REDIRECT_ATTEMPTS;
  *  @param request The request to cancel.
  *  @return YES if the request was canceled.
  */
-- (BOOL) cancelOpen:(OpenRequest*)request;
+- (BOOL)cancelOpen:(HYOpenRequest *)request;
 
 /**
  *  Writes a frame to the connection.
@@ -133,6 +107,6 @@ extern const unsigned int MAX_REDIRECT_ATTEMPTS;
  *  @param frame The frame to be sent.
  *  @return YES if the frame was sent.
  */
-- (BOOL) writeBytes:(Frame*)frame;
+- (BOOL)writeBytes:(HYFrame *)frame;
 
 @end

@@ -3,12 +3,18 @@
 //  hydna-objc
 //
 
-#import "ChannelData.h"
+#import "HYChannelData.h"
 
 
-@implementation ChannelData
+@implementation HYChannelData
 
-- (id) initWithPriority:(NSInteger)priority content:(NSData*)content ctype:(NSUInteger)ctype
+@synthesize m_priority;
+@synthesize m_content;
+@synthesize m_binary;
+
+- (id)initWithPriority:(NSInteger)priority
+               content:(NSData*)content
+                 ctype:(NSUInteger)ctype
 {
     if (!(self = [super init])) {
         return nil;
@@ -21,18 +27,15 @@
     return self;
 }
 
-- (BOOL) isBinaryContent
+- (BOOL)isBinaryContent
 {
     return self->m_binary;
 }
 
-- (BOOL) isUtf8Content
+- (BOOL)isUtf8Content
 {
     return !self->m_binary;
 }
 
-@synthesize m_priority;
-@synthesize m_content;
-@synthesize m_binary;
 
 @end

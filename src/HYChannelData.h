@@ -3,18 +3,20 @@
 //  hydna-objc
 //
 
-#import "Frame.h"
+#import "HYFrame.h"
 
 
-@interface ChannelData : NSObject {
+@interface HYChannelData : NSObject {
     NSInteger m_priority;
-    NSData *m_content;
     BOOL m_binary;
 }
 
-- (id) initWithPriority:(NSInteger)priority content:(NSData *)content ctype:(NSUInteger)ctype;
-- (BOOL) isBinaryContent;
-- (BOOL) isUtf8Content;
+- (id)initWithPriority:(NSInteger)priority
+               content:(NSData *)content
+                 ctype:(NSUInteger)ctype;
+
+- (BOOL)isBinaryContent;
+- (BOOL)isUtf8Content;
 
 @property (readonly, getter=priority) NSInteger m_priority;
 @property (readonly, getter=content) NSData *m_content;

@@ -7,8 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		2931A1141315A6DA003CEE46 /* ChannelError.h in Headers */ = {isa = PBXBuildFile; fileRef = 2931A1121315A6DA003CEE46 /* ChannelError.h */; };
-		2931A1151315A6DA003CEE46 /* ChannelError.m in Sources */ = {isa = PBXBuildFile; fileRef = 2931A1131315A6DA003CEE46 /* ChannelError.m */; };
 		2931A2141316F947003CEE46 /* hello-world.m in Sources */ = {isa = PBXBuildFile; fileRef = 2931A1D81316F75E003CEE46 /* hello-world.m */; };
 		2931A26D1316FF7A003CEE46 /* hydna-objc.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8DC2EF5B0486A6940098B216 /* hydna-objc.framework */; };
 		2931A5C013183753003CEE46 /* hydna-objc.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8DC2EF5B0486A6940098B216 /* hydna-objc.framework */; };
@@ -17,20 +15,24 @@
 		2931A7561318E27A003CEE46 /* speed-test.m in Sources */ = {isa = PBXBuildFile; fileRef = 2931A7551318E27A003CEE46 /* speed-test.m */; };
 		2931A7E21318FC84003CEE46 /* hydna-objc.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8DC2EF5B0486A6940098B216 /* hydna-objc.framework */; };
 		2931A7E41318FC94003CEE46 /* listener.m in Sources */ = {isa = PBXBuildFile; fileRef = 2931A7E31318FC94003CEE46 /* listener.m */; };
-		2932080B1304623B00D9DE1E /* ChannelData.h in Headers */ = {isa = PBXBuildFile; fileRef = 293208091304623B00D9DE1E /* ChannelData.h */; };
-		2932080C1304623B00D9DE1E /* ChannelData.m in Sources */ = {isa = PBXBuildFile; fileRef = 2932080A1304623B00D9DE1E /* ChannelData.m */; };
-		2932084313047D3B00D9DE1E /* ChannelSignal.h in Headers */ = {isa = PBXBuildFile; fileRef = 2932084113047D3B00D9DE1E /* ChannelSignal.h */; };
-		2932084413047D3B00D9DE1E /* ChannelSignal.m in Sources */ = {isa = PBXBuildFile; fileRef = 2932084213047D3B00D9DE1E /* ChannelSignal.m */; };
-		293208581304800E00D9DE1E /* OpenRequest.h in Headers */ = {isa = PBXBuildFile; fileRef = 293208561304800E00D9DE1E /* OpenRequest.h */; };
-		293208591304800E00D9DE1E /* OpenRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 293208571304800E00D9DE1E /* OpenRequest.m */; };
-		293208641304820800D9DE1E /* Channel.h in Headers */ = {isa = PBXBuildFile; fileRef = 293208621304820800D9DE1E /* Channel.h */; };
-		293208651304820800D9DE1E /* Channel.m in Sources */ = {isa = PBXBuildFile; fileRef = 293208631304820800D9DE1E /* Channel.m */; };
-		293208681304821F00D9DE1E /* Connection.h in Headers */ = {isa = PBXBuildFile; fileRef = 293208661304821F00D9DE1E /* Connection.h */; };
-		293208691304821F00D9DE1E /* Connection.m in Sources */ = {isa = PBXBuildFile; fileRef = 293208671304821F00D9DE1E /* Connection.m */; };
-		2932086C1304822E00D9DE1E /* Frame.h in Headers */ = {isa = PBXBuildFile; fileRef = 2932086A1304822E00D9DE1E /* Frame.h */; };
-		2932086D1304822E00D9DE1E /* Frame.m in Sources */ = {isa = PBXBuildFile; fileRef = 2932086B1304822E00D9DE1E /* Frame.m */; };
-		8888032B1474DF1000109AC4 /* URL.h in Headers */ = {isa = PBXBuildFile; fileRef = 8888032A1474DF1000109AC4 /* URL.h */; };
-		8888032D1474E0F100109AC4 /* URL.m in Sources */ = {isa = PBXBuildFile; fileRef = 8888032C1474E0F100109AC4 /* URL.m */; };
+		7489A40518B510A20055B59B /* HYURL.m in Sources */ = {isa = PBXBuildFile; fileRef = 7489A3F318B510A20055B59B /* HYURL.m */; };
+		7489A40618B510A20055B59B /* HYURL.h in Headers */ = {isa = PBXBuildFile; fileRef = 7489A3F418B510A20055B59B /* HYURL.h */; };
+		7489A40718B510A20055B59B /* HYOpenRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 7489A3F518B510A20055B59B /* HYOpenRequest.m */; };
+		7489A40818B510A20055B59B /* HYOpenRequest.h in Headers */ = {isa = PBXBuildFile; fileRef = 7489A3F618B510A20055B59B /* HYOpenRequest.h */; };
+		7489A40918B510A20055B59B /* HYHost.m in Sources */ = {isa = PBXBuildFile; fileRef = 7489A3F718B510A20055B59B /* HYHost.m */; };
+		7489A40A18B510A20055B59B /* HYHost.h in Headers */ = {isa = PBXBuildFile; fileRef = 7489A3F818B510A20055B59B /* HYHost.h */; };
+		7489A40B18B510A20055B59B /* HYFrame.m in Sources */ = {isa = PBXBuildFile; fileRef = 7489A3F918B510A20055B59B /* HYFrame.m */; };
+		7489A40C18B510A20055B59B /* HYFrame.h in Headers */ = {isa = PBXBuildFile; fileRef = 7489A3FA18B510A20055B59B /* HYFrame.h */; };
+		7489A40D18B510A20055B59B /* HYConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = 7489A3FB18B510A20055B59B /* HYConnection.m */; };
+		7489A40E18B510A20055B59B /* HYConnection.h in Headers */ = {isa = PBXBuildFile; fileRef = 7489A3FC18B510A20055B59B /* HYConnection.h */; };
+		7489A40F18B510A20055B59B /* HYChannelSignal.m in Sources */ = {isa = PBXBuildFile; fileRef = 7489A3FD18B510A20055B59B /* HYChannelSignal.m */; };
+		7489A41018B510A20055B59B /* HYChannelSignal.h in Headers */ = {isa = PBXBuildFile; fileRef = 7489A3FE18B510A20055B59B /* HYChannelSignal.h */; };
+		7489A41118B510A20055B59B /* HYChannelError.m in Sources */ = {isa = PBXBuildFile; fileRef = 7489A3FF18B510A20055B59B /* HYChannelError.m */; };
+		7489A41218B510A20055B59B /* HYChannelError.h in Headers */ = {isa = PBXBuildFile; fileRef = 7489A40018B510A20055B59B /* HYChannelError.h */; };
+		7489A41318B510A20055B59B /* HYChannelData.m in Sources */ = {isa = PBXBuildFile; fileRef = 7489A40118B510A20055B59B /* HYChannelData.m */; };
+		7489A41418B510A20055B59B /* HYChannelData.h in Headers */ = {isa = PBXBuildFile; fileRef = 7489A40218B510A20055B59B /* HYChannelData.h */; };
+		7489A41518B510A20055B59B /* HYChannel.m in Sources */ = {isa = PBXBuildFile; fileRef = 7489A40318B510A20055B59B /* HYChannel.m */; };
+		7489A41618B510A20055B59B /* HYChannel.h in Headers */ = {isa = PBXBuildFile; fileRef = 7489A40418B510A20055B59B /* HYChannel.h */; };
 		88F3BF0A137EA88E00BE169C /* hydna-objc.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8DC2EF5B0486A6940098B216 /* hydna-objc.framework */; };
 		88F3BF0B137EA89500BE169C /* multiple-channels.m in Sources */ = {isa = PBXBuildFile; fileRef = 88F3BEFB137EA85700BE169C /* multiple-channels.m */; };
 		88F3BF54137EB3C900BE169C /* DebugHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = 88F3BF52137EB3C900BE169C /* DebugHelper.h */; };
@@ -82,8 +84,6 @@
 		0867D6A5FE840307C02AAC07 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		089C1667FE841158C02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		1058C7B1FEA5585E11CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
-		2931A1121315A6DA003CEE46 /* ChannelError.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ChannelError.h; path = src/ChannelError.h; sourceTree = "<group>"; };
-		2931A1131315A6DA003CEE46 /* ChannelError.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = ChannelError.m; path = src/ChannelError.m; sourceTree = "<group>"; };
 		2931A1D81316F75E003CEE46 /* hello-world.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "hello-world.m"; path = "examples/hello-world.m"; sourceTree = "<group>"; };
 		2931A2081316F906003CEE46 /* hello-world */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "hello-world"; sourceTree = BUILT_PRODUCTS_DIR; };
 		2931A5BA13183749003CEE46 /* signals */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = signals; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -92,21 +92,25 @@
 		2931A7551318E27A003CEE46 /* speed-test.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "speed-test.m"; path = "examples/speed-test.m"; sourceTree = "<group>"; };
 		2931A7DC1318FC7D003CEE46 /* listener */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = listener; sourceTree = BUILT_PRODUCTS_DIR; };
 		2931A7E31318FC94003CEE46 /* listener.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = listener.m; path = examples/listener.m; sourceTree = "<group>"; };
-		293208091304623B00D9DE1E /* ChannelData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ChannelData.h; path = src/ChannelData.h; sourceTree = "<group>"; };
-		2932080A1304623B00D9DE1E /* ChannelData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = ChannelData.m; path = src/ChannelData.m; sourceTree = "<group>"; };
-		2932084113047D3B00D9DE1E /* ChannelSignal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ChannelSignal.h; path = src/ChannelSignal.h; sourceTree = "<group>"; };
-		2932084213047D3B00D9DE1E /* ChannelSignal.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = ChannelSignal.m; path = src/ChannelSignal.m; sourceTree = "<group>"; };
-		293208561304800E00D9DE1E /* OpenRequest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OpenRequest.h; path = src/OpenRequest.h; sourceTree = "<group>"; };
-		293208571304800E00D9DE1E /* OpenRequest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = OpenRequest.m; path = src/OpenRequest.m; sourceTree = "<group>"; };
-		293208621304820800D9DE1E /* Channel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Channel.h; path = src/Channel.h; sourceTree = "<group>"; };
-		293208631304820800D9DE1E /* Channel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = Channel.m; path = src/Channel.m; sourceTree = "<group>"; };
-		293208661304821F00D9DE1E /* Connection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Connection.h; path = src/Connection.h; sourceTree = "<group>"; };
-		293208671304821F00D9DE1E /* Connection.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = Connection.m; path = src/Connection.m; sourceTree = "<group>"; };
-		2932086A1304822E00D9DE1E /* Frame.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Frame.h; path = src/Frame.h; sourceTree = "<group>"; };
-		2932086B1304822E00D9DE1E /* Frame.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = Frame.m; path = src/Frame.m; sourceTree = "<group>"; };
 		32DBCF5E0370ADEE00C91783 /* hydna-objc_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "hydna-objc_Prefix.pch"; sourceTree = "<group>"; };
-		8888032A1474DF1000109AC4 /* URL.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = URL.h; path = src/URL.h; sourceTree = "<group>"; };
-		8888032C1474E0F100109AC4 /* URL.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = URL.m; path = src/URL.m; sourceTree = "<group>"; };
+		7489A3F318B510A20055B59B /* HYURL.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = HYURL.m; path = src/HYURL.m; sourceTree = "<group>"; };
+		7489A3F418B510A20055B59B /* HYURL.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = HYURL.h; path = src/HYURL.h; sourceTree = "<group>"; };
+		7489A3F518B510A20055B59B /* HYOpenRequest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = HYOpenRequest.m; path = src/HYOpenRequest.m; sourceTree = "<group>"; };
+		7489A3F618B510A20055B59B /* HYOpenRequest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = HYOpenRequest.h; path = src/HYOpenRequest.h; sourceTree = "<group>"; };
+		7489A3F718B510A20055B59B /* HYHost.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = HYHost.m; path = src/HYHost.m; sourceTree = "<group>"; };
+		7489A3F818B510A20055B59B /* HYHost.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = HYHost.h; path = src/HYHost.h; sourceTree = "<group>"; };
+		7489A3F918B510A20055B59B /* HYFrame.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = HYFrame.m; path = src/HYFrame.m; sourceTree = "<group>"; };
+		7489A3FA18B510A20055B59B /* HYFrame.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = HYFrame.h; path = src/HYFrame.h; sourceTree = "<group>"; };
+		7489A3FB18B510A20055B59B /* HYConnection.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = HYConnection.m; path = src/HYConnection.m; sourceTree = "<group>"; };
+		7489A3FC18B510A20055B59B /* HYConnection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = HYConnection.h; path = src/HYConnection.h; sourceTree = "<group>"; };
+		7489A3FD18B510A20055B59B /* HYChannelSignal.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = HYChannelSignal.m; path = src/HYChannelSignal.m; sourceTree = "<group>"; };
+		7489A3FE18B510A20055B59B /* HYChannelSignal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = HYChannelSignal.h; path = src/HYChannelSignal.h; sourceTree = "<group>"; };
+		7489A3FF18B510A20055B59B /* HYChannelError.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = HYChannelError.m; path = src/HYChannelError.m; sourceTree = "<group>"; };
+		7489A40018B510A20055B59B /* HYChannelError.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = HYChannelError.h; path = src/HYChannelError.h; sourceTree = "<group>"; };
+		7489A40118B510A20055B59B /* HYChannelData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = HYChannelData.m; path = src/HYChannelData.m; sourceTree = "<group>"; };
+		7489A40218B510A20055B59B /* HYChannelData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = HYChannelData.h; path = src/HYChannelData.h; sourceTree = "<group>"; };
+		7489A40318B510A20055B59B /* HYChannel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = HYChannel.m; path = src/HYChannel.m; sourceTree = "<group>"; };
+		7489A40418B510A20055B59B /* HYChannel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = HYChannel.h; path = src/HYChannel.h; sourceTree = "<group>"; };
 		88F3BEFB137EA85700BE169C /* multiple-channels.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "multiple-channels.m"; path = "examples/multiple-channels.m"; sourceTree = "<group>"; };
 		88F3BF02137EA86700BE169C /* multiple-streams */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "multiple-streams"; sourceTree = BUILT_PRODUCTS_DIR; };
 		88F3BF52137EB3C900BE169C /* DebugHelper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DebugHelper.h; path = src/DebugHelper.h; sourceTree = "<group>"; };
@@ -215,24 +219,26 @@
 		08FB77AEFE84172EC02AAC07 /* Classes */ = {
 			isa = PBXGroup;
 			children = (
-				293208661304821F00D9DE1E /* Connection.h */,
-				293208671304821F00D9DE1E /* Connection.m */,
-				293208561304800E00D9DE1E /* OpenRequest.h */,
-				293208571304800E00D9DE1E /* OpenRequest.m */,
-				2932086A1304822E00D9DE1E /* Frame.h */,
-				2932086B1304822E00D9DE1E /* Frame.m */,
-				293208621304820800D9DE1E /* Channel.h */,
-				293208631304820800D9DE1E /* Channel.m */,
-				293208091304623B00D9DE1E /* ChannelData.h */,
-				2932080A1304623B00D9DE1E /* ChannelData.m */,
-				2931A1121315A6DA003CEE46 /* ChannelError.h */,
-				2931A1131315A6DA003CEE46 /* ChannelError.m */,
-				2932084113047D3B00D9DE1E /* ChannelSignal.h */,
-				2932084213047D3B00D9DE1E /* ChannelSignal.m */,
+				7489A3F318B510A20055B59B /* HYURL.m */,
+				7489A3F418B510A20055B59B /* HYURL.h */,
+				7489A3F518B510A20055B59B /* HYOpenRequest.m */,
+				7489A3F618B510A20055B59B /* HYOpenRequest.h */,
+				7489A3F718B510A20055B59B /* HYHost.m */,
+				7489A3F818B510A20055B59B /* HYHost.h */,
+				7489A3F918B510A20055B59B /* HYFrame.m */,
+				7489A3FA18B510A20055B59B /* HYFrame.h */,
+				7489A3FB18B510A20055B59B /* HYConnection.m */,
+				7489A3FC18B510A20055B59B /* HYConnection.h */,
+				7489A3FD18B510A20055B59B /* HYChannelSignal.m */,
+				7489A3FE18B510A20055B59B /* HYChannelSignal.h */,
+				7489A3FF18B510A20055B59B /* HYChannelError.m */,
+				7489A40018B510A20055B59B /* HYChannelError.h */,
+				7489A40118B510A20055B59B /* HYChannelData.m */,
+				7489A40218B510A20055B59B /* HYChannelData.h */,
+				7489A40318B510A20055B59B /* HYChannel.m */,
+				7489A40418B510A20055B59B /* HYChannel.h */,
 				88F3BF52137EB3C900BE169C /* DebugHelper.h */,
 				88F3BF53137EB3C900BE169C /* DebugHelper.m */,
-				8888032A1474DF1000109AC4 /* URL.h */,
-				8888032C1474E0F100109AC4 /* URL.m */,
 			);
 			name = Classes;
 			sourceTree = "<group>";
@@ -282,15 +288,16 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2932080B1304623B00D9DE1E /* ChannelData.h in Headers */,
-				2932084313047D3B00D9DE1E /* ChannelSignal.h in Headers */,
-				293208581304800E00D9DE1E /* OpenRequest.h in Headers */,
-				293208641304820800D9DE1E /* Channel.h in Headers */,
-				293208681304821F00D9DE1E /* Connection.h in Headers */,
-				2932086C1304822E00D9DE1E /* Frame.h in Headers */,
-				2931A1141315A6DA003CEE46 /* ChannelError.h in Headers */,
 				88F3BF54137EB3C900BE169C /* DebugHelper.h in Headers */,
-				8888032B1474DF1000109AC4 /* URL.h in Headers */,
+				7489A41618B510A20055B59B /* HYChannel.h in Headers */,
+				7489A40A18B510A20055B59B /* HYHost.h in Headers */,
+				7489A41218B510A20055B59B /* HYChannelError.h in Headers */,
+				7489A41418B510A20055B59B /* HYChannelData.h in Headers */,
+				7489A40C18B510A20055B59B /* HYFrame.h in Headers */,
+				7489A40E18B510A20055B59B /* HYConnection.h in Headers */,
+				7489A40818B510A20055B59B /* HYOpenRequest.h in Headers */,
+				7489A40618B510A20055B59B /* HYURL.h in Headers */,
+				7489A41018B510A20055B59B /* HYChannelSignal.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -490,15 +497,16 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2932080C1304623B00D9DE1E /* ChannelData.m in Sources */,
-				2932084413047D3B00D9DE1E /* ChannelSignal.m in Sources */,
-				293208591304800E00D9DE1E /* OpenRequest.m in Sources */,
-				293208651304820800D9DE1E /* Channel.m in Sources */,
-				293208691304821F00D9DE1E /* Connection.m in Sources */,
-				2932086D1304822E00D9DE1E /* Frame.m in Sources */,
-				2931A1151315A6DA003CEE46 /* ChannelError.m in Sources */,
+				7489A40518B510A20055B59B /* HYURL.m in Sources */,
+				7489A40718B510A20055B59B /* HYOpenRequest.m in Sources */,
+				7489A40B18B510A20055B59B /* HYFrame.m in Sources */,
+				7489A41318B510A20055B59B /* HYChannelData.m in Sources */,
+				7489A40F18B510A20055B59B /* HYChannelSignal.m in Sources */,
+				7489A40918B510A20055B59B /* HYHost.m in Sources */,
+				7489A41518B510A20055B59B /* HYChannel.m in Sources */,
+				7489A40D18B510A20055B59B /* HYConnection.m in Sources */,
 				88F3BF55137EB3C900BE169C /* DebugHelper.m in Sources */,
-				8888032D1474E0F100109AC4 /* URL.m in Sources */,
+				7489A41118B510A20055B59B /* HYChannelError.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

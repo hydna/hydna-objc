@@ -3,12 +3,14 @@
 //  hydna-objc
 //
 
-#import "ChannelSignal.h"
+#import "HYChannelSignal.h"
 
 
-@implementation ChannelSignal
+@implementation HYChannelSignal
 
-- (id) initWithType:(NSInteger)type ctype:(NSUInteger)ctype content:(NSData*)content
+- (id)initWithType:(NSInteger)type
+             ctype:(NSUInteger)ctype
+           content:(NSData *)content
 {
     if (!(self = [super init])) {
         return nil;
@@ -21,12 +23,12 @@
     return self;
 }
 
-- (BOOL) isBinaryContent
+- (BOOL)isBinaryContent
 {
     return self->m_binary;
 }
 
-- (BOOL) isUtf8Content
+- (BOOL)isUtf8Content
 {
     return !self->m_binary;
 }

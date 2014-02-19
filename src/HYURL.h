@@ -4,7 +4,7 @@
 //
 
 
-@interface URL : NSObject {
+@interface HYURL : NSObject {
     NSUInteger m_port;
     NSString *m_path;
     NSString *m_host;
@@ -14,7 +14,7 @@
     NSString *m_error;
 }
 
-- (id) initWithExpr:(NSString*)expr;
+- (id)initWithExpr:(NSString *)expr;
 
 @property (readonly, getter=port) NSUInteger m_port;
 @property (readonly, getter=path) NSString *m_path;
