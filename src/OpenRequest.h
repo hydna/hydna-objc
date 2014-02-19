@@ -3,7 +3,6 @@
 //  hydna-objc
 //
 
-#import <Cocoa/Cocoa.h>
 
 #import "Frame.h"
 
