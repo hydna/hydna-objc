@@ -22,7 +22,7 @@ Implement the following optional **<HYChannelDelegate>** methods:
 
 Opening a channel:
 
-    HYChannel * channel = [[HYChannel alloc] init];
+    HYChannel *channel = [[HYChannel alloc] init];
     [channel setDelegate:self];
     @try {
         [self.channel connect:@"yourdomain.hydna.net" mode:READWRITEEMIT token:@"optionaltoken"];
