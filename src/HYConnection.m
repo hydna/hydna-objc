@@ -904,13 +904,9 @@ const unsigned int MAX_REDIRECT_ATTEMPTS = 5;
     channel = [request channel];
     
     if(request && channel){
-        NSLog(@"There is a request...");
-        //NSLog([request token]);
         [channel resolveSuccess:ch path:path token:[request token]];
     }
     
-    
- 
     [self.m_resolveMutex lock];
     [request release];
     [self.m_pendingResolveRequests removeObjectForKey:path];
