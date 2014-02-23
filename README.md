@@ -1,6 +1,8 @@
-# hydna-objc
+# Hydna Objective-C
 
-Hydna bindings for Objective-C.
+Hydna bindings for Objective-C. See https://www.hydna.com/documentation/ for full docs of our API.
+
+Get a free hydna domain at https://www.hydna.com/account/create/
 
 ## Usage
 
@@ -35,7 +37,7 @@ Sending some data:
 
 Sending a signal:
 
-    [channel emotString:@"Hello Signal"];
+    [channel emitString:@"Hello Signal"];
 
 Receiving data:
     
@@ -52,6 +54,34 @@ Receiving data:
         }
     }
 
+Receiving signals:
+    
+    - (void)channelSignal:(HYChannel *)sender data:(HYChannelSignal *)data
+    {
+        NSData *payload = [data content];
+
+        if ([data isUtf8Content]) {
+            NSString *message = [[NSString alloc] initWithData:payload encoding:NSUTF8StringEncoding];
+            NSLog(@"%@", message);
+            
+        } else {
+            NSLog(@"Binary data received");
+        }
+    }
+
+Handling close:
+
+    - (void)channelClose:(HYChannel *)sender error:(HYChannelError *)error
+    {
+        if (error.wasDenied) {
+            NSLog(@"Connection to hydna was denied: %@", error.reason);
+        } else if(error.wasClean) {
+            NSLog(@"Connection closed by user or behavior!");
+        } else {
+            NSLog(@"Error: %@", error.reason);
+        }
+    }
+
 ## Installation
 
 For convenient install please user our CocoaPod:
@@ -63,4 +93,3 @@ For convenient install please user our CocoaPod:
 All the headers can be found in src/ with comments.
 
 The examples are located in examples/.
-
